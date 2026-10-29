@@ -1,0 +1,50 @@
+{
+ "ridges-day": {
+  "file": "ridges-day.webp",
+  "w": 2048,
+  "h": 683,
+  "bytes": 200162
+ },
+ "ridges-golden": {
+  "file": "ridges-golden.webp",
+  "w": 2048,
+  "h": 683,
+  "bytes": 185410
+ },
+ "ridges-night": {
+  "file": "ridges-night.webp",
+  "w": 2048,
+  "h": 683,
+  "bytes": 120980
+ },
+ "grass-tile": {
+  "file": "grass-tile.webp",
+  "w": 512,
+  "h": 512,
+  "bytes": 101458
+ },
+ "clay-tile": {
+  "file": "clay-tile.webp",
+  "w": 512,
+  "h": 512,
+  "bytes": 57246
+ },
+ "planks-tile": {
+  "file": "planks-tile.webp",
+  "w": 512,
+  "h": 512,
+  "bytes": 32648
+ },
+ "crowd-modern": {
+  "file": "crowd-modern.webp",
+  "w": 2048,
+  "h": 500,
+  "bytes": 200412
+ },
+ "crowd-historic": {
+  "file": "crowd-historic.webp",
+  "w": 2048,
+  "h": 500,
+  "bytes": 213218
+ }
+}

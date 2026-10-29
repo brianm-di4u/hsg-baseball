@@ -39,6 +39,8 @@ export const tests = [
       s = await t.state();
       t.expect(s.game.park === 'majestic' && s.game.night, 'final played at Majestic Park under the lights');
       await t.game('pause');
+      // the bracket decides who hosts the final; if the user's team pitches first, throw one
+      if ((await t.state()).game.userPitches) { await stepUntil(t, (x) => x.game.phase === 'pre', 600, 5, 'ready to pitch'); await t.game('act', 'throw', { acc: 0.8 }); }
       await toFlight(t);
       await t.game('step', 10);
       await t.shot('41d-majestic');

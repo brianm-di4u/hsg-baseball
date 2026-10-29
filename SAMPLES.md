@@ -69,3 +69,13 @@ code is the mulberry32 RNG (CC0), which reaches this game through the collection
 | Determinism | mulberry32 RNG state inside the game state | 6 |
 | Loop | 60 Hz fixed step, render on demand in menus | 5 |
 | Balance | Node tool runs the real sim for whole seasons against PRD targets | 1 (validation idea), wave 2 lessons |
+
+## Visual campaign additions (3D)
+| What | Source | License | Where |
+|---|---|---|---|
+| three.js r186.1 | npm `three@0.186.1` (official package), bundled to one classic script by `tools/build-vendor.mjs` with esbuild 0.28.2 (build tool only, not shipped) | MIT, `vendor/three-LICENSE` | `vendor/three-r186.min.js` (GLTFLoader, SkeletonUtils and BufferGeometryUtils from the same package's `examples/jsm`) |
+| Ballplayer model and 14 animation clips | Original, scripted in Blender 5.2 (`art-src/blender/player.py`) | MIT (this repo) | `art-src/blender/player.glb` → `assets/models.js` (`tools/pack-models.mjs`) |
+| Painted textures (Ouachita ridge panoramas ×3, grass, clay and plank tiles, two crowd strips) | Original, generated with OpenAI image generation via the Codex CLI, from prompts written for this game (no reference images) | MIT (this repo) | `art-src/*.png` (git-ignored) → `assets/*.webp` via `shared/test-harness/art-pack.mjs` |
+| Ballparks, sky, trees, stands, alligator farm, scoreboard | Original procedural three.js code (`src/js/world3d.js`), shapes from the sim's own fence curves | MIT (this repo) | built at runtime |
+| Benchmarks (review only) | Steam store screenshots of Super Mega Baseball 4 and 3, Out of the Park Baseball 26, Backyard Baseball '97 | © their owners; not shipped | `benchmarks/` (git-ignored) |
+No code, art, UI layout or characters were taken from the benchmark games.

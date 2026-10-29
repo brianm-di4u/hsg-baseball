@@ -183,6 +183,7 @@ export function helpScreen(st) {
     <tr><td><kbd>B</kbd></td><td>Bunt on or off (before the pitch)</td></tr>
     <tr><td><kbd>S</kbd></td><td>Send the runner (steal) before the pitch</td></tr>
     <tr><td><kbd>F</kbd></td><td>Fast-forward a play</td></tr>
+    <tr><td><kbd>R</kbd></td><td>Replay the last ball in play (also in the pause menu)</td></tr>
     <tr><td><kbd>P</kbd> / <kbd>Esc</kbd></td><td>Pause</td></tr></tbody></table>
     <p><b>Touch:</b> the pad under the field has SWING, BUNT and STEAL when you bat, and the pitch buttons plus PITCH when you pitch. Drag on the field to move the target or cursor.</p>`;
   else if (tab === 'play') body = `<h3>Batting</h3><p>Watch the pitcher's arm. Press <b>SWING</b> as the ball reaches the front of the plate. The game grades every swing: <b>PERFECT</b>, <b>GOOD</b>, <b>EARLY</b> or <b>LATE</b>. Early swings pull the ball, late swings go the other way, mistimed swings foul off or miss. Taking a pitch outside the zone is a ball.</p>
@@ -222,6 +223,7 @@ export function settingsScreen(st) {
     ${seg('setSound', [[1, 'On'], [0, 'Off']], s.sound ? 1 : 0, 'Sound')}
     ${seg('setVol', [[0.25, 'Quiet'], [0.5, 'Medium'], [0.85, 'Loud']], s.vol, 'Volume')}
     ${seg('setMotion', [['auto', 'Follow system'], ['on', 'Reduced'], ['off', 'Full']], s.motion, 'Reduce motion')}
+    ${seg('setGfx', [['3d', '3D ballpark'], ['2d', 'Classic 2D']], s.gfx || '3d', 'Graphics')}
     ${seg('setTheme', [['auto', 'Follow system'], ['light', 'Day'], ['dark', 'Night']], s.theme, 'Theme')}
     ${seg('setText', [[100, '100%'], [115, '115%'], [130, '130%'], [150, '150%']], s.text, 'Text size')}
     ${seg('setDiff', DIFFS, s.difficulty, 'Difficulty')}
@@ -261,7 +263,7 @@ export function breakScreen(st) {
 export function pauseScreen(st) {
   const g = st.game;
   return `<div class="panel" role="dialog" aria-label="Paused"><h2>Paused</h2>${lineScore(g)}<p class="fine">${esc(g.log.slice(-1)[0] || '')}</p>
-    <div class="menu">${btn('resume', 'Resume', { cls: 'primary' })}${btn('box', 'Box score')}${btn('settings', 'Settings')}${btn('help', 'How to play')}${btn('quit', 'Quit game')}</div></div>`;
+    <div class="menu">${btn('resume', 'Resume', { cls: 'primary' })}${st.lastReplay ? btn('replay', 'Watch the replay') : ''}${btn('box', 'Box score')}${btn('settings', 'Settings')}${btn('help', 'How to play')}${btn('quit', 'Quit game')}</div></div>`;
 }
 export const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
 
@@ -311,7 +313,7 @@ export function scoreboard(g, info) {
   return `${T(1)}<div class="sb-mid"><span class="sb-inn">${g.half === 0 ? '▲' : '▼'} ${g.inning}</span>${diamond}
     <span class="sb-count"><span>B ${dots(g.balls, 3, 'b')}</span><span>S ${dots(g.strikes, 2, 's')}</span><span>O ${dots(g.outs, 2, 'o')}</span></span>
     <span class="sr-only">${g.balls} balls, ${g.strikes} strikes, ${g.outs} out${g.outs === 1 ? '' : 's'}</span></div>${T(0)}
-    <div class="sb-info"><span>P ${esc(info.pitcher)} · ${info.pc} ${info.pcs}</span><span>AB ${esc(info.batter)} · ${esc(info.line)}</span></div>`;
+    <div class="sb-info"><span>P ${esc(info.pitcher)} · ${info.pc} ${info.pcs}</span>${g.pitch && g.phase !== 'pre' ? `<span class="sb-pitch"><abbr title="${esc(PITCHES[g.pitch.type].name)}">${g.pitch.type}</abbr> <b>${Math.round(g.pitch.mph)}</b> mph</span>` : ''}<span>AB ${esc(info.batter)} · ${esc(info.line)}</span></div>`;
 }
 
 export function pad(role, g, st) {
@@ -325,7 +327,7 @@ export function pad(role, g, st) {
   if (role === 'pitch') {
     const P = st.pitcher;
     return `<div class="pad-row">${P.reps.map((t, i) => `<button class="pb small${g.sel === i ? ' on' : ''}" data-act="pitchType" data-arg="${i}" aria-pressed="${g.sel === i}" aria-label="${PITCHES[t].name} (${i + 1})">${t}<small>${i + 1}</small></button>`).join('')}
-      <button class="pb big" data-act="primary" aria-label="Pitch: press to start the meter, press again to throw (Space)">PITCH<small>${g.meter ? 'AGAIN' : 'SPACE'}</small></button></div>`;
+      <button class="pb big" data-act="primary" aria-label="Pitch: press to start the meter, press again to throw (Space)">PITCH<small${g.meter ? ' class="keep"' : ''}>${g.meter ? 'AGAIN' : 'SPACE'}</small></button></div>`;
   }
   if (role === 'ump') return `<div class="pad-row"><button class="pb wide" data-act="ump" data-arg="ball" aria-label="Call ball (B)">BALL<small>B</small></button><button class="pb wide" data-act="ump" data-arg="strike" aria-label="Call strike (S)">STRIKE<small>S</small></button></div>`;
   if (role === 'play') return `<div class="pad-row"><button class="pb small" data-act="skip" aria-label="Fast-forward (F)">▶▶<small>F</small></button></div>`;

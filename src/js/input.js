@@ -1,7 +1,7 @@
 // Keyboard, mouse and touch → intents. main.js decides what an intent means in the current phase.
 const KEYS = {
   ' ': 'primary', Enter: 'primary', ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
-  '1': 'p0', '2': 'p1', '3': 'p2', '4': 'p3', b: 'bunt', s: 'steal', f: 'skip', p: 'pause', Escape: 'escape',
+  '1': 'p0', '2': 'p1', '3': 'p2', '4': 'p3', b: 'bunt', s: 'steal', f: 'skip', r: 'replay', p: 'pause', Escape: 'escape',
 };
 export const I = { held: new Set(), handlers: null, dragging: false };
 

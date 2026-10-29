@@ -6,6 +6,7 @@ async function sweep(t, label) {
   for (const sc of screens) {
     await t.game('scene', sc);
     await t.page.waitForTimeout(260);
+    await t.waitForStable();
     const r = await contrastReport(t.page);
     fails = fails.concat(r.fails.map((f) => ({ ...f, sc })));
   }
@@ -13,9 +14,9 @@ async function sweep(t, label) {
   await t.game('step', 10);
   let r = await contrastReport(t.page);
   fails = fails.concat(r.fails.map((f) => ({ ...f, sc: 'game' })));
-  await t.game('scene', 'pause'); await t.page.waitForTimeout(260);
+  await t.game('scene', 'pause'); await t.page.waitForTimeout(260); await t.waitForStable();
   r = await contrastReport(t.page); fails = fails.concat(r.fails.map((f) => ({ ...f, sc: 'pause' })));
-  await t.game('scene', 'final'); await t.page.waitForTimeout(260);
+  await t.game('scene', 'final'); await t.page.waitForTimeout(260); await t.waitForStable();
   r = await contrastReport(t.page); fails = fails.concat(r.fails.map((f) => ({ ...f, sc: 'final' })));
   for (const f of fails.slice(0, 10)) t.log(`${label} ${f.sc}: "${f.text}" ${f.ratio} < ${f.need} (${f.tag}.${f.cls})`);
   t.equal(fails.length, 0, `${label}: all text passes WCAG contrast`);

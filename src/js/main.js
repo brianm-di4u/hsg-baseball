@@ -7,20 +7,21 @@ import { SWING_LAG } from './contact.js';
 import { DT, SCALE, createGame, battingTeam, fieldingTeam, batter, pitcher, userBats, userPitches, startPitch, userSwing, completePitch, applyPlay, endHalf, aiPitchSpec, flightTime, windowGame, stealable, applySituation, simToEnd } from './game.js';
 import { createSeason, nextGame, recordResult, simUserGame, sideFor } from './season.js';
 import { challenge, starsFor } from './challenges.js';
-import { R, initRender, resize, drawDuel, drawField, drawTitle, begin, clear, stepFx, burst, confetti, hitFlash, screenToPlate } from './render.js';
+import { R, initRender, resize, drawDuel, drawField, drawTitle, begin, clear, stepFx, burst, confetti, hitFlash, screenToPlate, zoneRect } from './render.js';
 import { initInput, heldAim } from './input.js';
+import { R3, want3d, init3d, render3d, p3, screenToPlate3, resize3d, ART, ART_READY } from './render3d.js';
 import { unlock, play, setVolume, setOn } from './audio.js';
 import { loadSave, writeSave, store, hash, clamp } from './util.js';
 import * as UI from './ui.js';
 
 const $ = (s) => document.querySelector(s);
-const DEFAULTS = { sound: true, vol: 0.5, motion: 'auto', text: 100, theme: 'auto', difficulty: 'varsity', aim: 'auto', pitchSpeed: 'normal', innings: 7, springInnings: 5, runRule: true, aggr: 'normal', zone: true, ring: false, autoMeter: false, facts: true };
+const DEFAULTS = { sound: true, vol: 0.5, motion: 'auto', text: 100, theme: 'auto', difficulty: 'varsity', aim: 'auto', pitchSpeed: 'normal', innings: 7, springInnings: 5, runRule: true, aggr: 'normal', zone: true, ring: false, autoMeter: false, facts: true, gfx: '3d' };
 const state = {
   scene: 'title', stack: [], settings: { ...DEFAULTS }, season: null,
   save: { stars: {}, album: [], trophies: [], records: { longest: 0, splashes: 0 } },
   mode: null, game: null, paused: false, helpTab: 'controls', seed: 0, busy: 0,
   pick: { home: 'hot-springs', away: 'lakeside', side: 'home', park: 'home', school: 'hot-springs', length: 'short', club: 'steam-valley' },
-  chal: null, chalResult: null, chalPending: null, breakFact: null, showBox: false, lastOpts: null, live: { playT: 0, resT: 0, halfT: 0, snap: true, calls: 0, next: null, umpCall: null, aiForce: null }, fxN: 0, titleT: 0,
+  chal: null, chalResult: null, chalPending: null, replay: null, lastReplay: null, breakFact: null, showBox: false, lastOpts: null, live: { playT: 0, resT: 0, halfT: 0, snap: true, calls: 0, next: null, umpCall: null, aiForce: null }, fxN: 0, titleT: 0,
 };
 
 // ---------------------------------------------------------------- saves
@@ -71,6 +72,7 @@ function makeGame(o) {
 }
 function enterGame(g, mode, opts) {
   state.game = g; state.mode = mode; state.lastOpts = opts; state.showBox = false; state.paused = !!(opts && opts.paused);
+  state.replay = null; state.lastReplay = null;
   Object.assign(state.live, { playT: 0, resT: 0, halfT: 0, snap: true, calls: 0, next: null, umpCall: null, aiForce: null });
   g.sel = 0; g.target = { x: 0, z: 2.5 }; g.aimX = 0; g.aimZ = 2.5;
   clearTimeout(gradeTimer); { const gr = $('#grade'); if (gr) gr.hidden = true; }
@@ -78,7 +80,7 @@ function enterGame(g, mode, opts) {
 }
 function newExhibition(o = {}) {
   const p = state.pick;
-  const opts = { mode: 'exhibition', home: o.home || p.home, away: o.away || p.away, user: o.user || p.side, park: o.park || p.park, innings: o.innings, seed: o.seed, situation: o.situation, paused: o.paused };
+  const opts = { mode: 'exhibition', home: o.home || p.home, away: o.away || p.away, user: o.user || p.side, park: o.park || p.park, innings: o.innings, seed: o.seed, situation: o.situation, paused: o.paused, night: !!o.night };
   enterGame(makeGame(opts), 'exhibition', opts);
 }
 function newSpring(o = {}) {
@@ -267,6 +269,7 @@ function afterComplete(r) {
   g.playKind = r;
   if (r === 'inplay' || r === 'foulplay') {
     g.phase = 'play'; g.phaseT = 0; L.playT = 0; L.calls = 0; L.snap = true; R.cam = null;
+    state.lastReplay = { play: g.play, half: g.half }; // kept for the replay (it never touches game state)
     hitFlash();
   } else { g.phase = 'result'; g.phaseT = 0; g.play = null; if (r !== 'foul') play('pop'); }
 }
@@ -348,8 +351,10 @@ function toFinal() {
 }
 
 // Sounds, announcements and effects from engine events.
+let pendingGrade = null;
 function processEvents(g) {
   for (const e of g.ev) {
+    if ((e.type === 'crack' || e.type === 'whiff') && pendingGrade) { showGrade(pendingGrade); pendingGrade = null; }
     if (e.type === 'say') { announce(e.text); if (e.kind === 'strike') play('strike'); else if (e.kind === 'ball') play('ball'); }
     else if (e.type === 'crack') play(e.grade === 'WAY EARLY' || e.grade === 'WAY LATE' ? 'foul' : 'crack', { q: e.q });
     else if (e.type === 'whiff') play('whiff');
@@ -357,7 +362,7 @@ function processEvents(g) {
     else if (e.type === 'played' && e.runs >= 2) play('organ');
     else if (e.type === 'walkoff') play('win');
     else if (e.type === 'sub') play('click');
-    else if (e.type === 'swing') showGrade(e.grade);
+    else if (e.type === 'swing') pendingGrade = e.grade; // shown at bat-ball contact (or the miss), not at the press
     else if (e.type === 'windup') { const gr = $('#grade'); if (gr) gr.hidden = true; }
   }
   g.ev.length = 0;
@@ -375,6 +380,7 @@ function primary() {
   const g = state.game;
   if (!g || state.scene !== 'game') return false;
   unlock();
+  if (state.replay) { endReplay(); return true; }
   if (g.phase === 'play') { state.live.ff = true; return true; }
   if (userPitches(g) && g.phase === 'pre') {
     if (state.settings.autoMeter) { throwPitch(0.75); return true; }
@@ -429,7 +435,14 @@ function render(enter = false) {
   if (f && sc !== 'game') {
     scr.hidden = false;
     scr.innerHTML = f(state);
-    if (enter && !R.reduced) { scr.classList.add('enter'); state.busy = 1; clearTimeout(enterTimer); enterTimer = setTimeout(() => { scr.classList.remove('enter'); state.busy = 0; }, 230); }
+    if (enter && !R.reduced) {
+      // busy until the panel's entry animation really ends (a slow frame can delay its start), with a fallback
+      scr.classList.add('enter'); state.busy = 1; clearTimeout(enterTimer);
+      const done = () => { clearTimeout(enterTimer); scr.classList.remove('enter'); state.busy = 0; };
+      const panel = scr.querySelector('.panel');
+      if (panel) panel.addEventListener('animationend', done, { once: true });
+      enterTimer = setTimeout(done, panel ? 900 : 230);
+    }
     if (enter) focusFirst(scr);
   } else { scr.hidden = true; scr.innerHTML = ''; }
   const g = state.game, inGame = !!g && OVER_GAME.has(sc);
@@ -450,35 +463,66 @@ function hud() {
   const g = state.game, B = batter(g), P = pitcher(g), bt = battingTeam(g).bat[B.id];
   const info = { pitcher: `${P.last}`, pc: fieldingTeam(g).pc[P.id] || 0, pcs: (fieldingTeam(g).pc[P.id] || 0) === 1 ? 'pitch' : 'pitches', batter: `${B.num} ${B.last}`, line: bt.ab || bt.bb ? `${bt.h}-for-${bt.ab}` : 'first time up' };
   const sb = UI.scoreboard(g, info);
-  const role = g.umpire ? 'ump' : g.phase === 'play' ? 'play' : userPitches(g) ? 'pitch' : userBats(g) ? 'bat' : 'watch';
+  const role = g.umpire ? 'ump' : g.phase === 'play' || state.replay ? 'play' : userPitches(g) ? 'pitch' : userBats(g) ? 'bat' : 'watch';
   const pad = UI.pad(role, g, { canSteal: !!stealable(g) && g.phase === 'pre', pitcher: P });
-  const key = sb + pad + (g.banner || '') + (g.lastCall || '');
+  const key = sb + pad + (g.banner || '') + (g.lastCall || '') + (state.replay ? 'R' : '');
   if (key === lastHud) return;
   lastHud = key;
   $('#sb').innerHTML = sb;
   $('#pad').innerHTML = pad;
   $('#pad').dataset.role = role;
   const ban = $('#banner');
-  const text = g.phase === 'half' ? g.banner : g.phase === 'result' && !g.play ? g.lastCall : g.phase === 'umpwait' ? 'Ball or strike?' : null;
+  const text = state.replay ? 'Replay' : g.phase === 'half' ? g.banner : g.phase === 'result' && !g.play ? g.lastCall : g.phase === 'umpwait' ? 'Ball or strike?' : null;
   ban.hidden = !text; ban.textContent = text || '';
   const tip = $('#tip');
   tip.textContent = role === 'bat' ? (state.settings.aim === 'aim' ? 'Arrows/mouse: aim · Space: swing · B: bunt · S: steal' : 'Space or click: swing · B: bunt · S: steal') : role === 'pitch' ? `1-${P.reps.length}: pitch · arrows/mouse: target · Space twice: meter` : role === 'ump' ? 'B: ball · S: strike' : role === 'play' ? 'F or Space: fast-forward' : '';
 }
 
+// Drawing: in 3D the WebGL view renders first and this canvas adds overlays. Outside the game loop,
+// draw requests are coalesced into one animation frame (tests step the sim many times per frame).
+let drawQueued = 0, inFrame = false;
 function draw() {
   if (!R.c) return;
+  if (use3d() && !inFrame) {
+    if (drawQueued) return;
+    // software GL (a frame costs ~100 ms): gather bursts of state changes into one redraw
+    if (R3.soft) drawQueued = setTimeout(() => { drawQueued = 0; drawNow(); }, 120);
+    else drawQueued = requestAnimationFrame(() => { drawQueued = 0; drawNow(); });
+    return;
+  }
+  drawNow();
+}
+function drawNow() {
   begin();
-  const g = state.game;
-  if (g && OVER_GAME.has(state.scene)) {
-    if ((g.phase === 'play' || (g.phase === 'result' && g.play)) && g.play) drawField(g, ui());
-    else drawDuel(g, ui());
-  } else if (state.scene === 'title' || !g) {
-    drawTitle(R.reduced ? null : state.titleT);
-  } else clear();
+  let g = state.game, u = g ? ui() : null;
+  const inGame = g && OVER_GAME.has(state.scene);
+  if (inGame && state.replay) { // replay: the saved play on a stand-in game object, from another camera
+    g = Object.assign(Object.create(g), { play: state.replay.play, half: state.replay.half, phase: 'play' });
+    u = { ...u, playT: state.replay.t, replay: true };
+  }
+  const field = inGame && (g.phase === 'play' || (g.phase === 'result' && g.play)) && g.play;
+  if (use3d()) render3d(inGame ? (field ? 'field' : 'duel') : 'title', inGame ? g : null, u, R.reduced ? 0 : state.titleT);
+  if (inGame) { if (field) drawField(g, u); else drawDuel(g, u); }
+  else if (state.scene === 'title' || !g) drawTitle(R.reduced ? null : state.titleT);
+  else clear();
+}
+// Graphics: the 3D view when it loaded and the player wants it, else the classic 2D canvas.
+const use3d = () => R3.ok && state.settings.gfx !== '2d';
+function applyGfx() {
+  const on = use3d();
+  R.p3 = on ? p3 : null; R.s2p = on ? screenToPlate3 : null;
+  document.body.classList.toggle('gl', on);
+  const c = document.getElementById('gl'); if (c) c.hidden = !on;
+  if (state.settings.gfx !== '2d' && !R3.ok && !R3.loading && !R3.failed && want3d()) init3d($('#stage'), on3d, ART);
+}
+function on3d() {
+  applyGfx();
+  if (state.game && OVER_GAME.has(state.scene)) hud();
+  draw(); // canvases only: menus keep their DOM (and any entry animation) as they are
 }
 
 // ---------------------------------------------------------------- loop
-let raf = 0, last = 0, acc = 0;
+let raf = 0, last = 0, acc = 0, titleN = 0;
 function wantsLoop() {
   if (state.scene === 'title') return !R.reduced;
   return state.scene === 'game' && !!state.game && !state.paused;
@@ -488,15 +532,22 @@ function frame(now) {
   raf = 0;
   if (!wantsLoop()) { draw(); return; }
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
-  if (state.scene === 'title') { state.titleT += dt; draw(); raf = requestAnimationFrame(frame); return; }
+  inFrame = true;
+  if (state.scene === 'title') { // the flyover; on software GL only every fourth frame, so menus stay responsive
+    state.titleT += dt; titleN++;
+    if (!R3.soft || !use3d() || titleN % 4 === 0) drawNow();
+    inFrame = false; raf = requestAnimationFrame(frame); return;
+  }
   acc += dt;
   let n = 0;
   while (acc >= DT && n < 6) { tickOnce(); acc -= DT; n++; }
-  if (state.scene === 'game') { hud(); draw(); }
+  if (state.scene === 'game') { hud(); drawNow(); }
+  inFrame = false;
   raf = requestAnimationFrame(frame);
 }
 function tickOnce() {
   if (state.scene !== 'game' || !state.game) return;
+  if (state.replay) { state.replay.t += DT; if (state.replay.t >= state.replay.play.out.timeline.dur + 0.4) endReplay(); stepFx(DT); return; }
   liveTick();
   stepFx(DT);
 }
@@ -545,7 +596,8 @@ function onClick(e) {
     case 'pitchType': selectPitch(+arg); break;
     case 'bunt': toggleBunt(); break;
     case 'steal': callSteal(); break;
-    case 'skip': if (state.game && state.game.phase === 'play') state.live.ff = true; break;
+    case 'skip': if (state.replay) endReplay(); else if (state.game && state.game.phase === 'play') state.live.ff = true; break;
+    case 'replay': startReplay(); break;
     case 'ump': umpCall(arg); break;
     case 'pause': pauseGame(); break;
     case 'resume': case 'continue': resumeGame(); break;
@@ -568,10 +620,20 @@ function onClick(e) {
     case 'setRing': setS('ring', arg === '1'); break;
     case 'setMeter': setS('autoMeter', arg === '1'); break;
     case 'setFacts': setS('facts', arg === '1'); break;
+    case 'setGfx': setS('gfx', arg); applyGfx(); draw(); break;
     default: break;
   }
 }
 function pauseGame() { if (state.scene !== 'game') return; state.paused = true; go('pause'); }
+// Replay the last ball in play from a low first-base-side camera; play resumes where it was.
+function startReplay() {
+  const g = state.game;
+  if (!g || !state.lastReplay || state.replay || !['pre', 'half'].includes(g.phase)) return false;
+  state.replay = { ...state.lastReplay, t: 0 };
+  if (state.scene !== 'game') { state.paused = false; state.stack = []; state.scene = 'game'; document.body.dataset.scene = 'game'; render(true); }
+  announce('Replay'); lastHud = ''; hud(); kickLoop(); return true;
+}
+function endReplay() { state.replay = null; lastHud = ''; if (state.game) hud(); draw(); }
 function resumeGame() { state.paused = false; state.stack = []; state.scene = 'game'; document.body.dataset.scene = 'game'; render(true); kickLoop(); }
 
 function onKey(k, e) {
@@ -591,7 +653,8 @@ function onKey(k, e) {
     case 'p0': case 'p1': case 'p2': case 'p3': selectPitch(+k[1]); return true;
     case 'bunt': toggleBunt(); return true;
     case 'steal': callSteal(); return true;
-    case 'skip': if (g && g.phase === 'play') state.live.ff = true; return true;
+    case 'skip': if (state.replay) endReplay(); else if (g && g.phase === 'play') state.live.ff = true; return true;
+    case 'replay': return startReplay();
     case 'pause': pauseGame(); return true;
     default: return ['left', 'right', 'up', 'down'].includes(k);
   }
@@ -635,6 +698,8 @@ function snapshot() {
     game: gs, season: state.season ? JSON.parse(JSON.stringify(state.season)) : null, stars: { ...state.save.stars }, album: state.save.album.slice(), trophies: state.save.trophies.slice(), records: { ...state.save.records },
     chal: state.chal ? { id: state.chal.c.id, tally: { ...state.chal.tally } } : null, chalResult: state.chalResult ? { id: state.chalResult.c.id, stars: state.chalResult.stars, text: state.chalResult.text } : null,
     breakFact: state.breakFact ? state.breakFact.id : null, fx: R.fx.length, view: { W: R.W, H: R.H }, pick: { ...state.pick },
+    replay: state.replay ? { t: +state.replay.t.toFixed(3) } : null, canReplay: !!state.lastReplay,
+    gfx: { mode: use3d() ? '3d' : '2d', quality: R3.quality, governed: R3.governed || 0, reason: R3.reason, view: R3.view, art: ART_READY.slice(), loading: R3.loading, park: R3.parkKey || null, cam: R3.view === 'duel' ? R3.camKind : R3.view, actors: R3.visible || 0, gpu: R3.gpu || '' },
   };
 }
 
@@ -648,7 +713,7 @@ window.__game = {
     render();
     return snapshot();
   },
-  isIdle: () => !state.busy,
+  isIdle: () => !state.busy && !R3.loading && !drawQueued,
   step(n = 1) { for (let i = 0; i < n; i++) tickOnce(); if (state.scene === 'game') hud(); draw(); return snapshot(); },
   pause() { state.paused = true; return true; },
   resume() { state.paused = false; kickLoop(); return true; },
@@ -702,6 +767,11 @@ window.__game = {
       case 'confetti': fxConfetti(); break;
       case 'chal': startChallenge(a[0], a[1] || {}); break;
       case 'tick': for (let i = 0; i < (a[0] || 1); i++) tickOnce(); break;
+      case 'replay': startReplay(); if (state.replay && a[0] != null) state.replay.t = a[0]; break;
+      case 'probe3d': { // plate point → screen → plate through the live camera (tests the overlay projection)
+        if (!R.p3) return { error: 'no 3D' };
+        drawNow(); const p = R.p3(a[0], 0, a[1]), q = R.s2p(p[0], p[1]); const z = zoneRect(); return { sx: p[0], sy: p[1], x: q.x, z: q.z, zone: z, W: R.W, H: R.H };
+      }
       default: return { error: `unknown act ${name}` };
     }
     if (state.scene === 'game') hud();
@@ -728,10 +798,11 @@ function boot() {
     padTouch = performance.now();
     onClick({ target: el });
   });
-  window.addEventListener('resize', () => { resize(); draw(); });
+  window.addEventListener('resize', () => { resize(); resize3d(); draw(); });
   try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySettings); window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => { applySettings(); kickLoop(); }); } catch (e) { /* old browsers */ }
   document.addEventListener('visibilitychange', () => { if (document.hidden && state.scene === 'game') pauseGame(); });
   go('title', false);
+  if (state.settings.gfx !== '2d' && want3d()) init3d($('#stage'), on3d, ART);
 }
 boot();
 export { state };

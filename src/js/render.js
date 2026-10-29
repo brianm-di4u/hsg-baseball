@@ -7,7 +7,11 @@ import { drawPitcher, drawBatter, drawMini, drawToken, drawGator, planks, shade 
 import { cursorHalf } from './contact.js';
 
 const TAU = Math.PI * 2;
-export const R = { cv: null, c: null, W: 0, H: 0, dpr: 1, reduced: false, cache: new Map(), fx: [], shake: 0, cam: null, linen: false, time: 0 };
+export const R = { cv: null, c: null, W: 0, H: 0, dpr: 1, reduced: false, cache: new Map(), fx: [], shake: 0, cam: null, linen: false, time: 0, p3: null, s2p: null };
+// When the 3D view is live, main.js sets R.p3 (game ft → CSS px) and R.s2p (CSS px → plate); this
+// canvas then only draws overlays (zone, target, cursor, meter, calls, effects) on a transparent layer.
+const ov = () => !!R.p3;
+const clearOv = () => R.c.clearRect(0, 0, R.W, R.H);
 
 export function initRender(cv) { R.cv = cv; R.c = cv.getContext('2d'); resize(); }
 export function resize() {
@@ -120,11 +124,13 @@ function duelBackdrop(park, look, home) {
 }
 
 export function zoneRect(cam) {
-  const a = proj(cam, -ZONE.x + 0.12, 0, ZONE.z1), b = proj(cam, ZONE.x - 0.12, 0, ZONE.z0);
+  const P = ov() ? R.p3 : (X, Y, Z) => proj(cam, X, Y, Z);
+  const a = P(-ZONE.x + 0.12, 0, ZONE.z1), b = P(ZONE.x - 0.12, 0, ZONE.z0);
   return { x: a[0], y: a[1], w: b[0] - a[0], h: b[1] - a[1] };
 }
 // Screen point → plate coordinates (for mouse/touch aiming).
 export function screenToPlate(sx, sy) {
+  if (R.s2p) return R.s2p(sx, sy);
   const cam = duelCam();
   const k = cam.F / cam.C;
   return { x: (sx - cam.cx) / k, z: cam.camH - (sy - cam.hy) / k };
@@ -134,19 +140,20 @@ export function screenToPlate(sx, sy) {
 export function drawDuel(g, ui) {
   const c = R.c, cam = duelCam(), park = PARKS[g.park] || PARKS.home;
   const look = parkLook(park, ui.night);
-  c.drawImage(duelBackdrop(park, look, g.teams[0]), 0, 0, R.W, R.H);
+  const O = ov(), proj3 = O ? (cm, X, Y, Z) => R.p3(X, Y, Z) : proj;
+  if (O) clearOv(); else c.drawImage(duelBackdrop(park, look, g.teams[0]), 0, 0, R.W, R.H);
   const fT = g.half === 0 ? g.teams[0] : g.teams[1], bT = g.half === 0 ? g.teams[1] : g.teams[0];
   const P = fT.roster[fT.pitcher], B = bT.roster[bT.lineup[bT.order]];
   // fielders in the background (far first)
   const sp = spots(park);
   const order = FIELD_POS.filter((p) => p !== 'P' && p !== 'C').sort((a, b) => sp[b][1] - sp[a][1]);
-  for (const pos of order) { const [x, y] = sp[pos]; const p = proj(cam, x, y, 0); drawMini(c, p[0], p[1], p[2], fT.kit, fT.roster[FIELD_POS.indexOf(pos) - 1].skin); }
+  if (!O) for (const pos of order) { const [x, y] = sp[pos]; const p = proj(cam, x, y, 0); drawMini(c, p[0], p[1], p[2], fT.kit, fT.roster[FIELD_POS.indexOf(pos) - 1].skin); }
   // pitcher
   const mp = proj(cam, 0, 60.5, 0.8);
   let w = 0;
   if (g.phase === 'windup') w = Math.min(1, g.phaseT / 0.9);
   else if (g.phase === 'flight' || g.phase === 'result') w = 1;
-  drawPitcher(c, mp[0], mp[1], mp[2], fT.kit, P.skin, w, P.throws === 'L');
+  if (!O) drawPitcher(c, mp[0], mp[1], mp[2], fT.kit, P.skin, w, P.throws === 'L');
   // the pitch
   const pt = g.pitch;
   let ball = null;
@@ -154,14 +161,14 @@ export function drawDuel(g, ui) {
     const T = pt.T * g.scale;
     const f = g.phase === 'flight' ? g.phaseT / T : 1;
     ball = pitchPoint(pt, Math.min(f, 1));
-    if (f >= 1) { // the catcher's mitt takes it
+    if (f >= 1 && !O) { // the catcher's mitt takes it
       const m = proj(cam, pt.px, 0, pt.pz);
       c.fillStyle = '#6B4423'; c.beginPath(); c.arc(m[0], m[1], 0.32 * m[2], 0, TAU); c.fill();
       c.fillStyle = '#4A2E16'; c.beginPath(); c.arc(m[0], m[1], 0.18 * m[2], 0, TAU); c.fill();
     }
     // timing ring assist: shrinks onto the ball as it arrives
     if (ui.ring && g.phase === 'flight' && ui.userBats && f < 1) {
-      const pp = proj(cam, pt.px, 0, pt.pz);
+      const pp = proj3(cam, pt.px, 0, pt.pz);
       c.strokeStyle = 'rgba(255,216,77,0.9)'; c.lineWidth = 3;
       c.beginPath(); c.arc(pp[0], pp[1], 6 + (1 - f) * 90, 0, TAU); c.stroke();
     }
@@ -176,7 +183,7 @@ export function drawDuel(g, ui) {
   }
   // user pitching target
   if (ui.userPitches && (g.phase === 'pre' || g.phase === 'windup')) {
-    const t = proj(cam, g.target.x, 0, g.target.z);
+    const t = proj3(cam, g.target.x, 0, g.target.z);
     c.strokeStyle = '#FFD84D'; c.lineWidth = 3;
     c.beginPath(); c.arc(t[0], t[1], 14, 0, TAU); c.moveTo(t[0] - 22, t[1]); c.lineTo(t[0] - 8, t[1]); c.moveTo(t[0] + 8, t[1]); c.lineTo(t[0] + 22, t[1]);
     c.moveTo(t[0], t[1] - 22); c.lineTo(t[0], t[1] - 8); c.moveTo(t[0], t[1] + 8); c.lineTo(t[0], t[1] + 22); c.stroke();
@@ -195,19 +202,19 @@ export function drawDuel(g, ui) {
   }
   const bunting = (g.bunt && ui.userBats) || (sw && sw.bunt);
   // ball behind or in front of the batter? draw ball after batter when it's at the plate
-  if (ball && ball.y > 6) drawBall(c, cam, ball);
-  drawBatter(c, bp[0], bp[1], bp[2] * 0.74, { ...bT.kit, number: B.num }, B.skin, side, swing, bunting && g.phase !== 'result');
-  if (ball && ball.y <= 6) drawBall(c, cam, ball);
+  if (ball && ball.y > 6 && !O) drawBall(c, cam, ball);
+  if (!O) drawBatter(c, bp[0], bp[1], bp[2] * 0.74, { ...bT.kit, number: B.num }, B.skin, side, swing, bunting && g.phase !== 'result');
+  if (ball && ball.y <= 6 && !O) drawBall(c, cam, ball);
   // contact cursor (aim mode)
   if (ui.userBats && ui.aim === 'aim' && g.phase !== 'play') {
     const cw = cursorHalf(B);
-    const a = proj(cam, g.aimX - cw, 0, g.aimZ + 0.32), b = proj(cam, g.aimX + cw, 0, g.aimZ - 0.32);
+    const a = proj3(cam, g.aimX - cw, 0, g.aimZ + 0.32), b = proj3(cam, g.aimX + cw, 0, g.aimZ - 0.32);
     c.strokeStyle = '#4FC3FF'; c.lineWidth = 3; c.beginPath(); c.ellipse((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (b[0] - a[0]) / 2, (b[1] - a[1]) / 2, 0, 0, TAU); c.stroke();
     c.fillStyle = 'rgba(79,195,255,0.18)'; c.fill();
   }
   // umpire-school reveal / pitch location after a take
   if (ui.reveal && pt && g.phase === 'result') {
-    const p = proj(cam, pt.px, 0, pt.pz);
+    const p = proj3(cam, pt.px, 0, pt.pz);
     c.strokeStyle = '#FFD84D'; c.lineWidth = 3; c.beginPath(); c.arc(p[0], p[1], Math.max(5, 0.13 * p[2]), 0, TAU); c.stroke();
   }
   // pitch meter
@@ -354,6 +361,11 @@ export function drawField(g, ui) {
     R.cam.k += (tgt.k - R.cam.k) * e; R.cam.cx += (tgt.cx - R.cam.cx) * e; R.cam.cy += (tgt.cy - R.cam.cy) * e;
     cam = { k: R.cam.k, ox: R.W / 2, oy: R.H / 2, cx: R.cam.cx, cy: R.cam.cy };
   }
+  if (ov()) { // 3D: only the call banner and effects
+    clearOv();
+    if (tl) { const live = tl.calls.filter((k) => t >= k.t && t < k.t + 1.3).slice(-1)[0]; if (live) callBanner(c, live.text, live.kind); }
+    drawFx(c); return;
+  }
   const sh = R.shake && !R.reduced ? [(Math.random() - 0.5) * R.shake, (Math.random() - 0.5) * R.shake] : [0, 0];
   c.save(); c.translate(sh[0], sh[1]);
   drawFieldBase(c, cam, park, look);
@@ -422,6 +434,7 @@ function drawFx(c) {
 
 // ---------------------------------------------------------------- title backdrop (static, or a slow ball arc)
 export function drawTitle(t, park = 'home') {
+  if (ov()) { clearOv(); return; }
   const c = R.c, pk = PARKS[park], look = parkLook(pk, false);
   const base = fieldCam(pk);
   drawFieldBase(c, { ...base, cx: 0, cy: 0 }, pk, look);
@@ -434,6 +447,6 @@ export function drawTitle(t, park = 'home') {
   }
 }
 
-export function clear(col = '#14121F') { R.c.fillStyle = col; R.c.fillRect(0, 0, R.W, R.H); }
+export function clear(col = '#14121F') { if (ov()) { clearOv(); return; } R.c.fillStyle = col; R.c.fillRect(0, 0, R.W, R.H); }
 export function begin() { R.c.setTransform(R.dpr, 0, 0, R.dpr, 0, 0); }
 export { RELEASE };

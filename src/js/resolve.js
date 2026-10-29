@@ -127,6 +127,9 @@ export function resolve(o, ctx) {
   const F = fielded.c.fl, A = fielded.at;
   const P = [A.x, A.y];
   if (!caught && !INFIELD.has(fielded.c.fl.pos)) delay += 0.5; // gather a ball on the ground in the outfield
+  // off the wall or into the corner: the carom and the chase cost time (the source of triples)
+  if (!caught && !INFIELD.has(fielded.c.fl.pos) && f.wall) delay += 0.7 + 0.5 * (((f.ev * 13.7 + f.spray * 3.1) % 1 + 1) % 1); // no RNG draw: seeded games keep their sequence
+  if (!caught && !INFIELD.has(fielded.c.fl.pos) && Math.abs(angleOf(fielded.at.x, fielded.at.y)) > 34 && Math.hypot(fielded.at.x, fielded.at.y) > 230) delay += 0.5;
   const tF = A.t + delay;
   ev.fielder = F.pos;
   // the ball up to the fielder

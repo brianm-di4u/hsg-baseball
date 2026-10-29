@@ -42,7 +42,7 @@ button { font: inherit; color: inherit; }
 .sb-bases rect.on { fill: #FFD84D; stroke: #FFD84D; }
 .sb-count { display: flex; flex-direction: column; font: 700 .78rem/1.25 var(--font-mono); }
 .dots { display: inline-flex; gap: 3px; vertical-align: middle; }
-.dots i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid #E9E2D2; display: inline-block; }
+.dots i { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid #E9E2D2; display: inline-block; }
 .dots.b i.on { background: #8FE3A8; border-color: #8FE3A8; }
 .dots.s i.on { background: #FFD84D; border-color: #FFD84D; }
 .dots.o i.on { background: #FF8A7A; border-color: #FF8A7A; }
@@ -265,3 +265,13 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
   .pb.big { min-width: 110px; }
   .tip { display: none; }
 }
+
+/* ---------- 3D view (three.js canvas under the 2D overlay canvas) ---------- */
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sb-pitch { color: #FFD84D; font-weight: 700; }
+.sb-pitch b { font: 800 1rem var(--font-mono); }
+body:not([data-scene="game"]) .tip { display: none; }
+.sb-pitch abbr { text-decoration: none; }
+/* touch: key hints on the pad are noise; keep the meter prompt */
+@media (pointer: coarse) { .pb small:not(.keep) { display: none; } }
+@media (min-width: 700px) { .sb-info { font-size: .86rem; } }

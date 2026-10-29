@@ -1,0 +1,13 @@
+{
+  "quality": 0.82,
+  "items": [
+    { "name": "ridges-day", "src": "ridges-day.png", "w": 2048, "h": 683, "keyWhite": 34 },
+    { "name": "ridges-golden", "src": "ridges-golden.png", "w": 2048, "h": 683, "keyWhite": 34 },
+    { "name": "ridges-night", "src": "ridges-night.png", "w": 2048, "h": 683, "keyWhite": 34 },
+    { "name": "grass-tile", "src": "grass-tile.png", "w": 512, "h": 512, "quality": 0.78 },
+    { "name": "clay-tile", "src": "clay-tile.png", "w": 512, "h": 512, "quality": 0.78 },
+    { "name": "planks-tile", "src": "planks-tile.png", "w": 512, "h": 512, "quality": 0.8 },
+    { "name": "crowd-modern", "src": "crowd-modern.png", "w": 2048, "h": 500, "crop": [0, 0.27, 1, 0.73] },
+    { "name": "crowd-historic", "src": "crowd-historic.png", "w": 2048, "h": 500, "crop": [0, 0.27, 1, 0.73] }
+  ]
+}

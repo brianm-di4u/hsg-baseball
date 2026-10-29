@@ -17,7 +17,8 @@ export const tests = [
       await t.touchDrag([cv.x + cv.width * 0.5, cv.y + cv.height * 0.5], [cv.x + cv.width * 0.62, cv.y + cv.height * 0.42], { steps: 6 });
       let s = await t.state();
       t.expect(s.game.aim.x > 0.15, `drag moves the bat cursor (x ${s.game.aim.x.toFixed(2)})`);
-      // bunt and steal toggles by tap
+      // bunt and steal toggles by tap (after the drag settles: software GL can lag a frame)
+      await t.waitForStable();
       await t.tap(await center(t, '[data-act="bunt"]'));
       s = await t.state();
       t.equal(s.game.bunt, true, 'tap BUNT');
@@ -39,7 +40,9 @@ export const tests = [
       t.equal(s.game.sel, 1, 'tap selects a pitch');
       await t.touchDrag([cv.x + cv.width * 0.5, cv.y + cv.height * 0.5], [cv.x + cv.width * 0.35, cv.y + cv.height * 0.58], { steps: 6 });
       s = await t.state();
-      t.expect(s.game.target.x < -0.2, `drag moves the pitch target (x ${s.game.target.x.toFixed(2)})`);
+      // the catcher's view (2D) puts first base on the right; the 3D center-field pitching camera faces home, so it is on the left
+      const left = s.gfx.cam === 'cf' ? s.game.target.x > 0.2 : s.game.target.x < -0.2;
+      t.expect(left, `drag moves the pitch target toward the finger (x ${s.game.target.x.toFixed(2)}, camera ${s.gfx.cam || '2d'})`);
       await t.tap(await center(t, '[data-act="primary"]'));
       s = await stepUntil(t, (x) => x.game.meter && x.game.meter.t >= 0.88, 200, 1, 'meter running');
       await t.shot('51b-touch-pitch', { wait: false });
