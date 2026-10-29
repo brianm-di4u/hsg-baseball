@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { click } from './helpers.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(here, '../../..');
+const root = path.resolve(here, '..');
 const facts = JSON.parse(fs.readFileSync(path.join(here, '../data/facts.json'), 'utf8')).facts;
-const bank = JSON.parse(fs.readFileSync(path.join(root, 'games/trivia/data/questions.json'), 'utf8')).questions;
+const bank = JSON.parse(fs.readFileSync(path.join(root, 'shared/data/trivia-questions.json'), 'utf8')).questions;
 const schools = JSON.parse(fs.readFileSync(path.join(root, 'shared/data/schools.json'), 'utf8')).schools;
 // Names that must never appear as players or playable teams (kept here, not in game data).
 const BANNED_TEAMS = ['Red Sox', 'Cubs', 'White Stockings', 'Pirates', 'Dodgers', 'Tigers', 'Yankees', 'Reds', 'Browns', 'Cardinals', 'Spiders', 'Crawfords', 'Grays', 'Monarchs', 'Clowns', 'Bathers', 'Vapors', 'White Sox', 'Athletics'];

@@ -1,5 +1,5 @@
 // Quick 3D review shots and fps with a GPU-backed Chromium (the harness runs headless SwiftShader).
-//   node games/baseball/tools/shots3d.mjs [out-dir] [--fps] [--only duel,field] [--sw]
+//   node tools/shots3d.mjs [out-dir] [--fps] [--only duel,field] [--sw]
 // Serves the repo root on a local port, opens the game, stages scenes through window.__game, and
 // writes PNGs (desktop 1280×800, mobile 390×844 @2x). --sw uses the default (software) GL instead.
 import http from 'node:http';
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(here, '../../..');
+const root = path.resolve(here, '..');
 const require = createRequire(path.join(root, 'shared/test-harness/package.json'));
 const { chromium } = require('playwright');
 const args = process.argv.slice(2);
@@ -49,7 +49,7 @@ for (const [vn, vo] of Object.entries(VPS)) {
   const errs = [];
   page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   page.on('pageerror', (e) => errs.push(String(e)));
-  await page.goto(`http://127.0.0.1:${port}/games/baseball/index.html`);
+  await page.goto(`http://127.0.0.1:${port}/index.html`);
   await page.waitForFunction(() => window.__game && window.__game.getState().gfx && !window.__game.getState().gfx.loading && window.__game.getState().gfx.mode, null, { timeout: 30000 });
   const gfx = await page.evaluate(() => window.__game.getState().gfx);
   const gpu = await page.evaluate(() => { const c = document.createElement('canvas').getContext('webgl2'); const d = c.getExtension('WEBGL_debug_renderer_info'); return c.getParameter(d ? d.UNMASKED_RENDERER_WEBGL : c.RENDERER); });

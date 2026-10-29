@@ -1,7 +1,7 @@
 // Packs the Blender exports into assets/models.js, a classic script that sets window.DS_MODELS to
 // base64 GLB strings, so the 3D view loads models from file:// too (fetch() of local files fails there).
 //
-//   node games/baseball/tools/pack-models.mjs
+//   node tools/pack-models.mjs
 //
 // Sources: art-src/blender/*.glb, built by the scripts beside them (see art-src/blender/*.py).
 import fs from 'node:fs';

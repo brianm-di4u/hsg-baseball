@@ -1,6 +1,6 @@
 # Diamond Springs ballplayer: one rigged, animated mesh shared by every player, umpire and runner.
 #
-#   "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b --python games/baseball/art-src/blender/player.py
+#   "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b --python art-src/blender/player.py
 #
 # Builds art-src/blender/player.blend and exports art-src/blender/player.glb (packed into
 # assets/models.js by tools/pack-models.mjs). Units are feet (the game's world unit); the character

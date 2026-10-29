@@ -1,11 +1,11 @@
 // Tiles art-src/blender/renders/*.png into renders/sheet.png for review (uses the harness's Chromium).
-//   node games/baseball/art-src/blender/sheet.mjs [filter]
+//   node art-src/blender/sheet.mjs [filter]
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 const here = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(path.join(here, '../../../../shared/test-harness/package.json'));
+const require = createRequire(path.join(here, '../../shared/test-harness/package.json'));
 const { chromium } = require('playwright');
 const dir = path.join(here, 'renders');
 const filt = process.argv[2] || '';

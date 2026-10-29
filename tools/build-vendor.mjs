@@ -2,7 +2,7 @@
 // game can load three.js with a plain <script src> (works from file://, where ES-module imports fail).
 //
 //   mkdir tmp && cd tmp && npm init -y && npm i three@0.186.1 esbuild@0.28.2
-//   node ../games/baseball/tools/build-vendor.mjs <path to that tmp/node_modules>
+//   node ../tools/build-vendor.mjs <path to that tmp/node_modules>
 //
 // Source: npm `three@0.186.1` (MIT, LICENSE copied to vendor/three-LICENSE). Recorded in SAMPLES.md.
 import path from 'node:path';

@@ -1,5 +1,5 @@
 # Renders pose previews of player.blend into art-src/blender/renders/ (git-ignored) for review.
-#   blender.exe -b games/baseball/art-src/blender/player.blend --python games/baseball/art-src/blender/preview.py -- idle:1 bat_swing:9:catcher
+#   blender.exe -b art-src/blender/player.blend --python art-src/blender/preview.py -- idle:1 bat_swing:9:catcher
 import bpy, os, sys
 from mathutils import Vector
 

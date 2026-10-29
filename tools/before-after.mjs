@@ -1,5 +1,5 @@
 // Before/after contact sheets: each shot that exists in both milestones, side by side.
-//   node games/baseball/tools/before-after.mjs [before=visual-before] [after=visual-final] [viewport=desktop]
+//   node tools/before-after.mjs [before=visual-before] [after=visual-final] [viewport=desktop]
 // Writes screenshots/<after>/sheets/before-after-<viewport>-NN.png (the harness's Chromium, no image libs).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(path.join(here, '../../../shared/test-harness/package.json'));
+const require = createRequire(path.join(here, '../shared/test-harness/package.json'));
 const { chromium } = require('playwright');
 const [before = 'visual-before', after = 'visual-final', vp = 'desktop'] = process.argv.slice(2);
 const shots = path.join(here, '..', 'screenshots');
