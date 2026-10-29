@@ -1,0 +1,318 @@
+{
+ "about": "Player-facing fact cards for Diamond Springs. Each restates one audited, confirmed question from games/trivia/data/questions.json (id). tools/check-facts.mjs verifies ids, confidence and sources. hs-0231 is shown only as a history card in the Fact Album, never in play.",
+ "facts": [
+  {
+   "id": "hs-0188",
+   "tag": "Spring training",
+   "text": "In 1886 the Chicago White Stockings came to Hot Springs for spring training, the first major league club to train there.",
+   "source": "Wikipedia: Hot Springs, Arkansas"
+  },
+  {
+   "id": "hs-0189",
+   "tag": "Spring training",
+   "text": "The Chicago White Stockings who trained in Hot Springs in 1886 are known today as the Chicago Cubs.",
+   "source": "Hot Springs Historic Baseball Trail: Baseball's Golden Days in Hot Springs"
+  },
+  {
+   "id": "hs-0300",
+   "tag": "Spring training",
+   "text": "White Stockings president Albert Spalding decided to train his team in a warmer climate. Cap Anson was the playing-manager.",
+   "source": "Encyclopedia of Arkansas: Major League Spring Training in Hot Springs"
+  },
+  {
+   "id": "hs-0302",
+   "tag": "Spring training",
+   "text": "Future evangelist Billy Sunday was a member of the 1886 White Stockings trip to Hot Springs.",
+   "source": "Hot Springs Historic Baseball Trail: Hot Springs Baseball Grounds"
+  },
+  {
+   "id": "hs-0485",
+   "tag": "Myth or fact",
+   "text": "Hot Springs has been called the birthplace of spring training, but it was not unquestionably the first: the New York Mutuals went to New Orleans, perhaps the first team to train away from home.",
+   "source": "Wikipedia: Spring training"
+  },
+  {
+   "id": "hs-0208",
+   "tag": "Baseball Grounds",
+   "text": "Cap Anson hit three home runs at the Hot Springs Baseball Grounds on March 28, 1887.",
+   "source": "Hot Springs Historic Baseball Trail: Hot Springs Baseball Grounds"
+  },
+  {
+   "id": "hs-0196",
+   "tag": "Whittington Park",
+   "text": "Hot Springs' Whittington Park ballfield opened in 1894, replacing the Hot Springs Baseball Grounds.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0197",
+   "tag": "Whittington Park",
+   "text": "Whittington Park's right-field fence was 260 feet from home plate. Left field was 340 feet and center 400 feet.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0219",
+   "tag": "Whittington Park",
+   "text": "Lights were installed at Whittington Park in 1936. The right-field fence was raised 15 feet in 1938.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0218",
+   "tag": "Whittington Park",
+   "text": "From 1921 to 1923 Whittington Park was called McKee Park. It took back the Whittington name from 1924 to 1935.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0217",
+   "tag": "Ban Johnson Park",
+   "text": "In 1935 Whittington Park was renamed for American League founder Ban Johnson.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0198",
+   "tag": "Pirates",
+   "text": "The Pittsburgh Pirates trained at Whittington Park from 1901 to 1916.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0185",
+   "tag": "School colors",
+   "text": "In 1912 baseball star Honus Wagner bought and donated basketball uniforms to Hot Springs High School, in the Pirates' black and gold.",
+   "source": "Wikipedia: Hot Springs, Arkansas"
+  },
+  {
+   "id": "hs-0199",
+   "tag": "Majestic Park",
+   "text": "In 1909 Red Sox owner John I. Taylor built the stands at Hot Springs' Majestic Park and signed a five-year lease on the site.",
+   "source": "Wikipedia: Majestic Park"
+  },
+  {
+   "id": "hs-0200",
+   "tag": "Majestic Park",
+   "text": "The Detroit Tigers first created a practice field on the Majestic Park site in 1908. The original park was demolished in 1918.",
+   "source": "Wikipedia: Majestic Park"
+  },
+  {
+   "id": "hs-0201",
+   "tag": "Majestic Park",
+   "text": "During their years training at Majestic Park, the Red Sox won the World Series in 1912, 1915, 1916 and 1918.",
+   "source": "Wikipedia: Majestic Park"
+  },
+  {
+   "id": "hs-0202",
+   "tag": "Fogel Field",
+   "text": "Fogel Field was built in 1912 to meet the demand of over 250 major leaguers training in Hot Springs.",
+   "source": "Hot Springs Historic Baseball Trail: See the Trail"
+  },
+  {
+   "id": "hs-0203",
+   "tag": "Fogel Field",
+   "text": "Fogel Field, built in 1912 by the Hot Springs Park Company, is also known as Fordyce Field.",
+   "source": "Hot Springs Historic Baseball Trail: See the Trail"
+  },
+  {
+   "id": "hs-0183",
+   "tag": "The long drive",
+   "text": "On March 17, 1918, Babe Ruth hit a home run at Whittington Park that landed in the Arkansas Alligator Farm.",
+   "source": "Wikipedia: Hot Springs, Arkansas"
+  },
+  {
+   "id": "hs-0184",
+   "tag": "The long drive",
+   "text": "In 2011 B&F Engineering measured Ruth's 1918 home run at about 573 feet. A Boston newspaper at the time thought it went more than 500 feet.",
+   "source": "KNWA/KFTA: The home run that made Babe Ruth a star"
+  },
+  {
+   "id": "hs-0336",
+   "tag": "The long drive",
+   "text": "Baseball historian Bill Jenkinson helped authenticate the estimated 573-foot figure, but said no one can confirm it with complete certainty.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0193",
+   "tag": "The long drive",
+   "text": "Though mainly a pitcher, Babe Ruth played first base in that March 17, 1918, exhibition.",
+   "source": "KNWA/KFTA: The home run that made Babe Ruth a star"
+  },
+  {
+   "id": "hs-0194",
+   "tag": "The long drive",
+   "text": "Ruth's famous 1918 home run came in the sixth inning. It flew over the right-field fence and across the street.",
+   "source": "KNWA/KFTA: The home run that made Babe Ruth a star"
+  },
+  {
+   "id": "hs-0481",
+   "tag": "The long drive",
+   "text": "Ruth's first home run of March 17, 1918, landed in a wood pile. His second landed in the Alligator Farm.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0192",
+   "tag": "The long drive",
+   "text": "The Red Sox played Brooklyn in Babe Ruth's March 17, 1918, exhibition at Whittington Park.",
+   "source": "KNWA/KFTA: The home run that made Babe Ruth a star"
+  },
+  {
+   "id": "hs-0399",
+   "tag": "Alligator Farm",
+   "text": "The Arkansas Alligator Farm was founded on Whittington Avenue in 1902.",
+   "source": "Wikipedia: Hot Springs, Arkansas"
+  },
+  {
+   "id": "hs-0266",
+   "tag": "Babe Ruth",
+   "text": "Per the Historic Baseball Trail, Babe Ruth trained in Hot Springs nine times.",
+   "source": "Hot Springs Historic Baseball Trail: See the Trail"
+  },
+  {
+   "id": "hs-0204",
+   "tag": "Black baseball",
+   "text": "The Hot Springs Arlingtons, a Black baseball club, played at Whittington Park from 1896 to 1903. The Hot Springs Blues followed in 1904.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0215",
+   "tag": "Negro leagues",
+   "text": "The Pittsburgh Crawfords trained at Hot Springs' Fogel Field from 1932 to 1935. The Homestead Grays had trained there in 1930–31.",
+   "source": "Wikipedia: Hot Springs, Arkansas"
+  },
+  {
+   "id": "hs-0220",
+   "tag": "Negro leagues",
+   "text": "Sam Guinn Field opened in 1933 at 497 Crescent Avenue to host Negro league spring training.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0221",
+   "tag": "Negro leagues",
+   "text": "The Sam Guinn Field trail marker names Negro league clubs that trained there, including the Kansas City Monarchs, the Pittsburgh Crawfords and the Homestead Grays.",
+   "source": "Hot Springs Historic Baseball Trail: See the Trail"
+  },
+  {
+   "id": "hs-0228",
+   "tag": "Negro leagues",
+   "text": "Hank Aaron, 18, played a 1952 Negro League World Series game in Hot Springs with the Indianapolis Clowns.",
+   "source": "Hot Springs Historic Baseball Trail: See the Trail"
+  },
+  {
+   "id": "hs-0222",
+   "tag": "Baseball school",
+   "text": "The Ray Doan (All-Star) Baseball School ran in Hot Springs from 1933 to 1938. Attendance peaked at 450 in 1938.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0314",
+   "tag": "Baseball school",
+   "text": "Babe Didrikson attended Hot Springs' Ray Doan baseball school in 1934. Instructors included Rogers Hornsby and Bob Feller.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0223",
+   "tag": "Umpire school",
+   "text": "Hot Springs' George Barr school (1935–47) is recognized as the first school for umpires.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0224",
+   "tag": "Baseball college",
+   "text": "Rogers Hornsby ran a \"Baseball College\" in Hot Springs from 1939, based at Majestic Field.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0229",
+   "tag": "Bathers",
+   "text": "The Hot Springs Bathers played in the Class C Cotton States League in 1938–41 and 1947–55.",
+   "source": "Wikipedia: Hot Springs Bathers"
+  },
+  {
+   "id": "hs-0230",
+   "tag": "Bathers",
+   "text": "The Hot Springs Bathers won Cotton States League titles in 1941, 1948 and 1950.",
+   "source": "Wikipedia: Hot Springs Bathers"
+  },
+  {
+   "id": "hs-0209",
+   "tag": "Vapors",
+   "text": "Hot Springs' professional baseball team in 1906 was the Hot Springs Vapors. The Vaporites followed in 1908–09.",
+   "source": "Wikipedia: Hot Springs Bathers"
+  },
+  {
+   "id": "hs-0267",
+   "tag": "Hall of Famers",
+   "text": "More than 130 Hall of Famers played or trained at Whittington/Ban Johnson Park, including Cy Young, Ty Cobb, Walter Johnson and Satchel Paige.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0268",
+   "tag": "Whittington Park",
+   "text": "Arkansas-born Hall of Fame catcher Bill Dickey was discovered subbing in a semi-pro game at Whittington Park.",
+   "source": "Hot Springs Historic Baseball Trail: See the Trail"
+  },
+  {
+   "id": "hs-0207",
+   "tag": "Whittington Park",
+   "text": "On March 18, 1912, Tris Speaker homered over Whittington Park's left-field fence.",
+   "source": "Hot Springs Historic Baseball Trail: Tris Speaker"
+  },
+  {
+   "id": "hs-0206",
+   "tag": "Whittington Park",
+   "text": "Sam \"Wahoo\" Crawford, the MLB career triples leader, played a 1911 exhibition at Whittington Park.",
+   "source": "Hot Springs Historic Baseball Trail: See the Trail"
+  },
+  {
+   "id": "hs-0271",
+   "tag": "The baths",
+   "text": "Slugger Al Simmons credited Hot Springs' baths and trails with saving his career.",
+   "source": "Hot Springs Historic Baseball Trail: See the Trail"
+  },
+  {
+   "id": "hs-0245",
+   "tag": "Today",
+   "text": "A Weyerhaeuser parking lot now covers the site of old Ban Johnson Park. A home-plate marker remains.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0246",
+   "tag": "Today",
+   "text": "Cement bleachers called the \"Wolves Den\" survive on the hillside at the old Ban Johnson Park site.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0247",
+   "tag": "Majestic Park",
+   "text": "The rebuilt Majestic Park was completed in spring 2021, after voters passed a bond issue in September 2019.",
+   "source": "Wikipedia: Majestic Park"
+  },
+  {
+   "id": "hs-0248",
+   "tag": "Majestic Park",
+   "text": "The modern Majestic Park in Hot Springs has five baseball fields, plus grandstands, batting cages and playgrounds.",
+   "source": "Wikipedia: Majestic Park"
+  },
+  {
+   "id": "hs-0249",
+   "tag": "Majestic Park",
+   "text": "Hot Springs sought an $8.5 million bond for the renovation of Majestic Park. A $500,000 grant from the Oaklawn Foundation helped start it.",
+   "source": "Wikipedia: Majestic Park"
+  },
+  {
+   "id": "hs-0250",
+   "tag": "Majestic Park",
+   "text": "National Park College uses Majestic Park as its home baseball field.",
+   "source": "Wikipedia: Majestic Park"
+  },
+  {
+   "id": "hs-0456",
+   "tag": "Film",
+   "text": "The First Boys of Spring, a 2015 documentary about Hot Springs baseball, was narrated by Billy Bob Thornton.",
+   "source": "Wikipedia: Ban Johnson Park"
+  },
+  {
+   "id": "hs-0231",
+   "tag": "History",
+   "text": "In 1953 Cotton States League owners tried to expel the Hot Springs Bathers for signing brothers Jim and Leander Tugerson. The eviction was not permanent, but the brothers never played a regular-season game for Hot Springs.",
+   "source": "Wikipedia: Hot Springs Bathers",
+   "album": "history"
+  }
+ ]
+}
