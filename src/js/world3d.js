@@ -266,6 +266,7 @@ function seating(group, a, b, rows, L, o = {}) {
     const w = Math.min(40, len * 0.5);
     const pb = box(w, 9, 12, std(L.wood ? '#7B5B3A' : '#D7DADF')); pb.position.set(len / 2, H + 4.5, D - 4); pb.castShadow = true; holder.add(pb);
     const win = box(w - 2, 3, 0.3, std('#20303A', { roughness: 0.2, metalness: 0.4 })); win.position.set(len / 2, H + 5.5, D - 10.2); holder.add(win);
+    pb.userData.camHide = win.userData.camHide = true; // the broadcast camera sits behind the press box: render3d hides it then
   }
   if (o.brace) { // 1912 Hot Springs photos: unroofed plank stands, a solid board front wall, X-braced timber frame behind
     const wm = new T.MeshStandardMaterial({ map: imgTex('planks-tile', 1) || null, color: imgTex('planks-tile') ? '#C9B08A' : '#8A6A44', roughness: 0.95 });
@@ -574,7 +575,7 @@ function batchStatic(root) {
   root.updateMatrixWorld(true);
   const groups = new Map(), victims = [];
   root.traverse((o) => {
-    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.visible || Array.isArray(o.material)) return;
+    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.visible || Array.isArray(o.material) || o.userData.camHide) return;
     const m = o.material;
     if (m.isShaderMaterial || m.transparent || m.map && m.map.isCanvasTexture && m.emissiveMap) return; // sky, decals, glass, the live scoreboard
     const k = `${m.uuid}|${o.castShadow ? 1 : 0}|${o.receiveShadow ? 1 : 0}`;
@@ -705,6 +706,7 @@ export function buildPark(parkKey, night) {
   trees(root, park, L, !!park.gator);
   if (park.gator) { alligatorFarm(root, park, L); hillside(root, L); rixTower(root, L); }
   batchStatic(root);
-  return { root, park, L, board };
+  const camHide = []; root.traverse((o) => { if (o.userData.camHide) camHide.push(o); });
+  return { root, park, L, board, camHide };
 }
 export { MOUND };

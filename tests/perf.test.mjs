@@ -14,10 +14,18 @@ export const tests = [
       t.expect(t.loadMs <= 2000, 'interactive in ≤ 2 s');
       // the 3D view loads after first paint: three.js, the packed models and the painted WebP set
       // (assets/art.js, the same set as data URLs, is only fetched from file:// and not counted twice)
-      const dir = (d) => fs.readdirSync(path.join(here, '..', d)).filter((f) => !f.endsWith('.json') && !f.includes('LICENSE') && f !== 'art.js').reduce((a, f) => a + fs.statSync(path.join(here, '..', d, f)).size, 0);
+      const dir = (d) => fs.readdirSync(path.join(here, '..', d)).filter((f) => !f.endsWith('.json') && !f.includes('LICENSE') && f !== 'art.js' && !f.startsWith('ceiling-') && !f.startsWith('players-')).reduce((a, f) => a + fs.statSync(path.join(here, '..', d, f)).size, 0);
       const total = size + dir('vendor') + dir('assets');
       t.log(`total download ${(total / 1048576).toFixed(2)} MB (html + vendor + assets)`);
       t.expect(total <= 3.5 * 1048576, 'total download ≤ 3.5 MB');
+      // the v3 player packs load after the game is up, one per tier (VISUAL-PLAN-3.md budgets)
+      for (const [tier, mb] of [['medium', 4], ['high', 10]]) {
+        const f = path.join(here, '..', 'assets', `players-${tier}.js`);
+        if (!fs.existsSync(f)) continue;
+        const s = fs.statSync(f).size;
+        t.log(`players-${tier}.js ${(s / 1048576).toFixed(2)} MB`);
+        t.expect(s <= mb * 1048576, `players-${tier}.js ≤ ${mb} MB`);
+      }
       const t0 = Date.now();
       await t.page.waitForFunction(() => { const g = window.__game.getState().gfx; return g && !g.loading; }, null, { timeout: 20000 });
       const gfx = (await t.state()).gfx;

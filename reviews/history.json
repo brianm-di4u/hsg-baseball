@@ -1,0 +1,58 @@
+{
+  "loops": [
+    {
+      "loop": 0,
+      "scores": {
+        "characters": 3,
+        "charfit": 3,
+        "animation": 4,
+        "environment": 4.5,
+        "lighting": 5,
+        "ui": 6,
+        "readability": 5.5,
+        "mobile": 5.5
+      },
+      "total": 36.5,
+      "stalls": 0,
+      "verdict": "continue",
+      "critics": {
+        "critic-claude": {
+          "characters": 3,
+          "charfit": 2.5,
+          "animation": 3.5,
+          "environment": 4.5,
+          "lighting": 5,
+          "ui": 5.5,
+          "readability": 5,
+          "mobile": 5.5
+        },
+        "critic-codex": {
+          "characters": 3,
+          "charfit": 2.5,
+          "animation": 4,
+          "environment": 4.5,
+          "lighting": 4.5,
+          "ui": 6,
+          "readability": 5.5,
+          "mobile": 5.5
+        },
+        "advocate": {
+          "characters": 3.5,
+          "charfit": 3,
+          "animation": 4,
+          "environment": 5,
+          "lighting": 5,
+          "ui": 6,
+          "readability": 5.5,
+          "mobile": 5.5
+        }
+      },
+      "calibration": {
+        "perfGate": "pass: high desktop min 715 fps / p95 1.9 ms; medium phone proxy min 102.7 fps, est. phone GPU ~19 ms; heap max 36.4 MB; software GL is the baseline; download not in perf.json",
+        "factRulings": "neck present (advocate right); catcher gear present but unconstructed (advocate right); R03 leg lift not visible (Codex wrong); R03 delivery authored, capture too wide (advocate right); strike zone clear of chalk in R16 (Claude wrong); R13 broad gradient not pools (advocate right)",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
+    }
+  ]
+}

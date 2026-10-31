@@ -1,0 +1,200 @@
+{
+ "mpfb_version": [
+  2,
+  0,
+  18
+ ],
+ "blender": "5.2.3 LTS",
+ "args": {
+  "name": "base_cmu_mb",
+  "rig": "cmu_mb",
+  "proxy": "",
+  "skin": "young_caucasian_male.mhmat",
+  "skin_type": "GAMEENGINE",
+  "subdiv": 0,
+  "hires": false,
+  "gender": 1.0,
+  "age": 0.5,
+  "muscle": 0.8,
+  "weight": 0.55,
+  "height": 0.62,
+  "proportions": 0.8,
+  "glb": "",
+  "blend": "",
+  "stats": "mpfb2-proof/base_cmu_mb.json"
+ },
+ "rig_name": "cmu_mb",
+ "armature": "base_cmu_mb",
+ "bone_count": 31,
+ "bones": [
+  {
+   "name": "Hips",
+   "parent": null
+  },
+  {
+   "name": "LHipJoint",
+   "parent": "Hips"
+  },
+  {
+   "name": "LeftUpLeg",
+   "parent": "LHipJoint"
+  },
+  {
+   "name": "LeftLeg",
+   "parent": "LeftUpLeg"
+  },
+  {
+   "name": "LeftFoot",
+   "parent": "LeftLeg"
+  },
+  {
+   "name": "LeftToeBase",
+   "parent": "LeftFoot"
+  },
+  {
+   "name": "LowerBack",
+   "parent": "Hips"
+  },
+  {
+   "name": "Spine",
+   "parent": "LowerBack"
+  },
+  {
+   "name": "Spine1",
+   "parent": "Spine"
+  },
+  {
+   "name": "LeftShoulder",
+   "parent": "Spine1"
+  },
+  {
+   "name": "LeftArm",
+   "parent": "LeftShoulder"
+  },
+  {
+   "name": "LeftForeArm",
+   "parent": "LeftArm"
+  },
+  {
+   "name": "LeftHand",
+   "parent": "LeftForeArm"
+  },
+  {
+   "name": "LThumb",
+   "parent": "LeftHand"
+  },
+  {
+   "name": "LeftFingerBase",
+   "parent": "LeftHand"
+  },
+  {
+   "name": "LeftHandFinger1",
+   "parent": "LeftFingerBase"
+  },
+  {
+   "name": "Neck",
+   "parent": "Spine1"
+  },
+  {
+   "name": "Neck1",
+   "parent": "Neck"
+  },
+  {
+   "name": "Head",
+   "parent": "Neck1"
+  },
+  {
+   "name": "RightShoulder",
+   "parent": "Spine1"
+  },
+  {
+   "name": "RightArm",
+   "parent": "RightShoulder"
+  },
+  {
+   "name": "RightForeArm",
+   "parent": "RightArm"
+  },
+  {
+   "name": "RightHand",
+   "parent": "RightForeArm"
+  },
+  {
+   "name": "RThumb",
+   "parent": "RightHand"
+  },
+  {
+   "name": "RightFingerBase",
+   "parent": "RightHand"
+  },
+  {
+   "name": "RightHandFinger1",
+   "parent": "RightFingerBase"
+  },
+  {
+   "name": "RHipJoint",
+   "parent": "Hips"
+  },
+  {
+   "name": "RightUpLeg",
+   "parent": "RHipJoint"
+  },
+  {
+   "name": "RightLeg",
+   "parent": "RightUpLeg"
+  },
+  {
+   "name": "RightFoot",
+   "parent": "RightLeg"
+  },
+  {
+   "name": "RightToeBase",
+   "parent": "RightFoot"
+  }
+ ],
+ "meshes": [
+  {
+   "name": "base_cmu_mb.body",
+   "verts": 13380,
+   "tris": 26756,
+   "materials": [
+    "base_cmu_mb.body"
+   ],
+   "shape_keys": 0,
+   "vertex_groups": 183
+  },
+  {
+   "name": "base_cmu_mb.eyebrow001",
+   "verts": 124,
+   "tris": 192,
+   "materials": [
+    "base_cmu_mb.eyebrow001"
+   ],
+   "shape_keys": 0,
+   "vertex_groups": 1
+  },
+  {
+   "name": "base_cmu_mb.eyelashes01",
+   "verts": 250,
+   "tris": 368,
+   "materials": [
+    "base_cmu_mb.eyelashes01"
+   ],
+   "shape_keys": 0,
+   "vertex_groups": 1
+  },
+  {
+   "name": "base_cmu_mb.low-poly",
+   "verts": 96,
+   "tris": 172,
+   "materials": [
+    "base_cmu_mb.low-poly"
+   ],
+   "shape_keys": 0,
+   "vertex_groups": 1
+  }
+ ],
+ "total_tris": 27488,
+ "total_verts": 13850,
+ "height_m": 1.8803
+}

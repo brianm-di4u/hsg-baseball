@@ -19,3 +19,20 @@ art-src/**/renders/
 /art-src/dem/
 # Raw downloaded map data (USGS, Census, NHD, OSM; refetched by game tools)
 /art-src/geo/raw/
+
+# Performance-ceiling ladder (art-src/blender/ceiling.py, tools/pack-ceiling.mjs): measurement only, rebuilt on demand
+/art-src/ceiling/
+/assets/ceiling-*.js
+
+# Phase 1 character samples (research/character-sources.md): third-party downloads and the isolated
+# Blender profile with MPFB are re-fetched from the URLs in that doc. Keep our scripts, stats and camera JSON.
+/art-src/samples/*
+!/art-src/samples/_scripts/
+!/art-src/samples/reference-renders/
+!/art-src/samples/mpfb2-proof/
+/art-src/samples/mpfb2-proof/*.glb
+/art-src/samples/mpfb2-proof/*.blend
+/art-src/samples/_scripts/__pycache__/
+# Built v3 players (art-src/blender/players/build_players.py): reproducible from MPFB; the packs in assets/ ship them
+/art-src/blender/players/out/*
+!/art-src/blender/players/out/meta.json

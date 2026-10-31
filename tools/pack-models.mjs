@@ -19,6 +19,9 @@ for (const f of names) {
   console.log(`${f}  ${(b.length / 1024).toFixed(1)} KB`);
 }
 js += '};\n';
+// the v3 player packs that exist (tools/pack-players.mjs), so the game only asks for files that are there
+const packs = fs.readdirSync(path.join(here, '..', 'assets')).map((f) => /^players-(\w+)\.js$/.exec(f)).filter(Boolean).map((m) => m[1]).sort();
+js += `window.DS_MODELS.packs = ${JSON.stringify(packs)};\n`;
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, js);
 console.log(`${path.relative(process.cwd(), out)}  ${(js.length / 1024).toFixed(1)} KB`);

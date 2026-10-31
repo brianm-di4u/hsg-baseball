@@ -1,0 +1,174 @@
+{
+ "bones": [
+  "Root",
+  "pelvis",
+  "spine_01",
+  "spine_02",
+  "spine_03",
+  "clavicle_l",
+  "upperarm_l",
+  "lowerarm_l",
+  "hand_l",
+  "index_01_l",
+  "index_02_l",
+  "index_03_l",
+  "middle_01_l",
+  "middle_02_l",
+  "middle_03_l",
+  "pinky_01_l",
+  "pinky_02_l",
+  "pinky_03_l",
+  "ring_01_l",
+  "ring_02_l",
+  "ring_03_l",
+  "thumb_01_l",
+  "thumb_02_l",
+  "thumb_03_l",
+  "glove",
+  "clavicle_r",
+  "upperarm_r",
+  "lowerarm_r",
+  "hand_r",
+  "index_01_r",
+  "index_02_r",
+  "index_03_r",
+  "middle_01_r",
+  "middle_02_r",
+  "middle_03_r",
+  "pinky_01_r",
+  "pinky_02_r",
+  "pinky_03_r",
+  "ring_01_r",
+  "ring_02_r",
+  "ring_03_r",
+  "thumb_01_r",
+  "thumb_02_r",
+  "thumb_03_r",
+  "bat",
+  "neck_01",
+  "head",
+  "cap",
+  "helmet",
+  "mask",
+  "gear",
+  "thigh_l",
+  "calf_l",
+  "foot_l",
+  "ball_l",
+  "shinguard_l",
+  "thigh_r",
+  "calf_r",
+  "foot_r",
+  "ball_r",
+  "shinguard_r"
+ ],
+ "variants": {
+  "lean": {
+   "tris": [
+    27999,
+    9000,
+    2599
+   ],
+   "clips": [],
+   "height": 6.308245658874512,
+   "hipHeight": 3.421539783477783,
+   "landmarks": {
+    "z_belt": 3.7654982089996336,
+    "z_knee": 1.7900569438934326,
+    "z_pants": 1.207895152568817
+   },
+   "chest": {
+    "upFront": 0.22,
+    "front": 0.6426922422647476,
+    "upBack": 0.15,
+    "back": 0.22707438886165618
+   },
+   "bytes_high": 2094816,
+   "bytes_medium": 732064
+  },
+  "average": {
+   "tris": [
+    27999,
+    9000,
+    2600
+   ],
+   "clips": [
+    "ump",
+    "throw",
+    "run",
+    "ready",
+    "pitch",
+    "idle",
+    "field_ground",
+    "crouch",
+    "cheer",
+    "catch_high",
+    "bat_swing",
+    "bat_stance",
+    "bat_bunt"
+   ],
+   "height": 6.043680191040039,
+   "hipHeight": 3.249069929122925,
+   "landmarks": {
+    "z_belt": 3.587489652633667,
+    "z_knee": 1.7295258045196533,
+    "z_pants": 1.1661081829667093
+   },
+   "chest": {
+    "upFront": 0.22,
+    "front": 0.6336146634817124,
+    "upBack": 0.15,
+    "back": 0.23244849264621734
+   },
+   "bytes_high": 2676008,
+   "bytes_medium": 1307436
+  },
+  "stocky": {
+   "tris": [
+    28000,
+    9000,
+    2600
+   ],
+   "clips": [],
+   "height": 5.886170864105225,
+   "hipHeight": 3.1383419036865234,
+   "landmarks": {
+    "z_belt": 3.473905849456787,
+    "z_knee": 1.6921963691711426,
+    "z_pants": 1.1405162295699118
+   },
+   "chest": {
+    "upFront": 0.22,
+    "front": 0.6616117697954178,
+    "upBack": 0.15,
+    "back": 0.255038623213768
+   },
+   "bytes_high": 2096716,
+   "bytes_medium": 732520
+  }
+ },
+ "lods": [
+  28000,
+  9000,
+  2600
+ ],
+ "units": "ft",
+ "regions": {
+  "jersey": 0,
+  "pants": 1,
+  "sock": 2,
+  "skin": 3,
+  "cap": 4,
+  "helmet": 5,
+  "shoe": 6,
+  "belt": 7,
+  "under": 8,
+  "glove": 9,
+  "bat": 10,
+  "dark": 11,
+  "gear": 12,
+  "white": 13,
+  "hair": 14,
+  "trim": 15
+ }
+}

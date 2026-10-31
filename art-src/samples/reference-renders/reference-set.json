@@ -1,0 +1,48 @@
+{
+  "doc": "research/character-sources.md",
+  "renderer": "art-src/samples/_scripts/render_turnaround.py (Cycles GPU 128 spp + denoise, Standard view transform, 1024 px, sRGB 0.5 grey; *_mask.png = alpha silhouette)",
+  "set": [
+    {
+      "prefix": "hbm_male_realistic",
+      "role": "top-end anatomy and silhouette (clay, untextured)",
+      "source": "Blender Studio Human Base Meshes v1.4.1, collection 'Body Male - Realistic' (GEO-body_male_realistic, multires level 3)",
+      "url": "https://www.blender.org/download/demo-files/",
+      "license": "CC0",
+      "tris": 1354880,
+      "height_m": 1.690,
+      "views": ["front", "three_quarter", "side", "back", "face", "face_34", "hand"],
+      "rebuild": "extract_collection.py on human_base_meshes_bundle.blend -> hbm-reference/body_male_realistic.blend, then render_turnaround.py"
+    },
+    {
+      "prefix": "mpfb2_athlete",
+      "role": "textured skin, face, eyes, hands and hair; same topology family as the recommended base body",
+      "source": "MPFB 2.0.18 + MakeHuman system assets; macros gender 1, age 0.5, muscle 1, weight 0.6, proportions 1, height 0.65; subdiv 1; ENHANCED_SSS skin young_caucasian_male; high-poly procedural eyes; short02 hair; game_engine rig (A-pose)",
+      "url": "https://extensions.blender.org/add-ons/mpfb/",
+      "license": "CC0 output (MPFB code GPL-3.0, build tool only)",
+      "tris": 120536,
+      "height_m": 1.941,
+      "views": ["front", "three_quarter", "side", "back", "face", "face_34", "hand"],
+      "rebuild": "mpfb_build.py --name ref_athlete --rig game_engine --skin-type ENHANCED_SSS --subdiv 1 --hires --hair short02.mhclo --muscle 1.0 --weight 0.6 --proportions 1.0 --height 0.65 --blend mpfb2-reference/ref_athlete_hires.blend"
+    },
+    {
+      "prefix": "si_jersey",
+      "role": "uniform cloth, placket, collar, sleeve trim and lettering reference (garment only)",
+      "source": "Smithsonian NMAH, Marge Villa jersey (AAGPBL), 150k-4096 glb",
+      "url": "https://3d.si.edu/object/3d/marge-villa-jersey:c0c953ae-8539-436a-8f32-81bd88bc9d5a",
+      "license": "CC0",
+      "tris": 150000,
+      "height_m": 0.712,
+      "views": ["front", "three_quarter", "side", "back"]
+    }
+  ],
+  "baseline": [
+    {
+      "prefix": "mpfb2_game27k_glb",
+      "role": "recommended base body at game resolution, rendered from the exported GLB (not a top-end reference)",
+      "source": "mpfb2-proof/athletic_male_game_engine.glb",
+      "license": "CC0 output",
+      "tris": 27488,
+      "height_m": 1.926
+    }
+  ]
+}

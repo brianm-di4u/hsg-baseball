@@ -9,7 +9,7 @@ import { createSeason, nextGame, recordResult, simUserGame, sideFor } from './se
 import { challenge, starsFor } from './challenges.js';
 import { R, initRender, resize, drawDuel, drawField, drawTitle, begin, clear, stepFx, burst, confetti, hitFlash, screenToPlate, zoneRect } from './render.js';
 import { initInput, heldAim } from './input.js';
-import { R3, want3d, init3d, render3d, p3, screenToPlate3, resize3d, ART, ART_READY } from './render3d.js';
+import { R3, want3d, init3d, render3d, p3, screenToPlate3, resize3d, setQuality, camLook, glShot, gfxProfile, gfxInfo, ART, ART_READY } from './render3d.js';
 import { unlock, play, setVolume, setOn } from './audio.js';
 import { loadSave, writeSave, store, hash, clamp } from './util.js';
 import * as UI from './ui.js';
@@ -534,7 +534,8 @@ function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
   inFrame = true;
   if (state.scene === 'title') { // the flyover; on software GL only every fourth frame, so menus stay responsive
-    state.titleT += dt; titleN++;
+    if (R3.frozen == null) state.titleT += dt; // a capture froze the clock
+    titleN++;
     if (!R3.soft || !use3d() || titleN % 4 === 0) drawNow();
     inFrame = false; raf = requestAnimationFrame(frame); return;
   }
@@ -699,7 +700,7 @@ function snapshot() {
     chal: state.chal ? { id: state.chal.c.id, tally: { ...state.chal.tally } } : null, chalResult: state.chalResult ? { id: state.chalResult.c.id, stars: state.chalResult.stars, text: state.chalResult.text } : null,
     breakFact: state.breakFact ? state.breakFact.id : null, fx: R.fx.length, view: { W: R.W, H: R.H }, pick: { ...state.pick },
     replay: state.replay ? { t: +state.replay.t.toFixed(3) } : null, canReplay: !!state.lastReplay,
-    gfx: { mode: use3d() ? '3d' : '2d', quality: R3.quality, governed: R3.governed || 0, reason: R3.reason, view: R3.view, art: ART_READY.slice(), loading: R3.loading, park: R3.parkKey || null, cam: R3.view === 'duel' ? R3.camKind : R3.view, actors: R3.visible || 0, gpu: R3.gpu || '' },
+    gfx: { mode: use3d() ? '3d' : '2d', quality: R3.quality, governed: R3.governed || 0, reason: R3.reason, view: R3.view, art: ART_READY.slice(), loading: R3.loading, park: R3.parkKey || null, cam: R3.view === 'duel' ? R3.camKind : R3.view, actors: R3.visible || 0, gpu: R3.gpu || '', v3: R3.v3 || null, v3loading: !!R3.playersLoading, v3err: R3.v3err || null },
   };
 }
 
@@ -713,7 +714,7 @@ window.__game = {
     render();
     return snapshot();
   },
-  isIdle: () => !state.busy && !R3.loading && !drawQueued,
+  isIdle: () => !state.busy && !R3.loading && !R3.playersLoading && !drawQueued,
   step(n = 1) { for (let i = 0; i < n; i++) tickOnce(); if (state.scene === 'game') hud(); draw(); return snapshot(); },
   pause() { state.paused = true; return true; },
   resume() { state.paused = false; kickLoop(); return true; },
@@ -772,6 +773,13 @@ window.__game = {
         if (!R.p3) return { error: 'no 3D' };
         drawNow(); const p = R.p3(a[0], 0, a[1]), q = R.s2p(p[0], p[1]); const z = zoneRect(); return { sx: p[0], sy: p[1], x: q.x, z: q.z, zone: z, W: R.W, H: R.H };
       }
+      // review captures and profiling (tools/shots-review.mjs, tools/perf-review.mjs)
+      case 'clock': R3.frozen = a[0] == null ? null : +a[0]; if (a[0] != null) state.titleT = +a[0] / 1000; break; // freeze ambient time
+      case 'quality': if (R3.ok && a[0]) { R3.pinned = true; setQuality(a[0]); R3.governed = 0; } break;
+      case 'camLook': { const ok = camLook(a[0], a[1], a[2], a[3]); drawNow(); return ok; }
+      case 'glShot': drawNow(); return glShot();
+      case 'gfx': return gfxInfo();
+      case 'gfxProfile': return gfxProfile(a[0] !== false);
       default: return { error: `unknown act ${name}` };
     }
     if (state.scene === 'game') hud();

@@ -1,0 +1,209 @@
+[
+  {
+    "id": "G-char-anatomical-mesh",
+    "category": "charfit",
+    "expectedGain": 2,
+    "severity": 5,
+    "effort": "L",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R02-pitcher",
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R16-1B",
+      "crops/high/R02-batter_hands"
+    ],
+    "benchmark": "mpfb2_athlete_front, mpfb2_game27k_glb_front, hbm_male_realistic_hand",
+    "fix": "Skinned anatomical mesh at ~7.3 heads: neck >= 0.4 head-heights, deltoid/hip/knee landmarks, 5-finger hands wrapping the bat handle at LOD0, 3 body presets. Test: R02/R16/R17 silhouettes overlap mpfb2 masks; fingers round handle in R02-batter_hands; 3 builds in R05.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-foot-grounding",
+    "category": "animation",
+    "expectedGain": 1,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R05-batter_feet",
+      "crops/high/R03-pitcher",
+      "crops/high/R12-pitcher",
+      "crops/high/R02-pitcher"
+    ],
+    "fix": "Fix root-height offset and add foot IK/ground lock: soles within 2 cm of terrain in stance, set and landing; pivot foot on rubber in set (no two-footed hop); no mound penetration. Airborne run phases excluded.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-garment-seams",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R05-catcher",
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R02-batter_hands",
+      "crops/high/R10-batter-trot"
+    ],
+    "fix": "On the shipped mesh remove sawtooth collar/belt/shirt-tail triangles, fix skin poke-through at elbow/wrist/collar, mask chest lettering and numbers to torso UVs. Test: clean edges in R05-catcher, R17-pitcher_hands; no forearm lettering in R02-batter_hands.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-replay-trot-cameras",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS5",
+    "evidence": [
+      "strips/high/R11",
+      "strips/high/R10",
+      "strips/high/R03",
+      "crops/high/R10-batter-trot"
+    ],
+    "fix": "R11 replay plays motion; HR camera follows the runner; R03 capture frames pitcher at >= 100 px and spans release. Test: R11 frames differ, runner in all 8 R10 frames, 8 distinct pitcher poses in R03.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-face-sculpt",
+    "category": "characters",
+    "expectedGain": 1,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R03-pitcher",
+      "crops/high/R12-pitcher"
+    ],
+    "benchmark": "mpfb2_athlete_face, smb4-4",
+    "fix": "Modelled lids, brow, nose, lips, ears and hair replace ball eyes and blob nose; at least 3 face variants. Test: R02-batter_head holds up next to mpfb2_athlete_face.",
+    "priority": 0.938,
+    "selected": false
+  },
+  {
+    "id": "G-kit",
+    "category": "characters",
+    "expectedGain": 1,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R03-pitcher",
+      "crops/high/R05-batter_feet",
+      "crops/high/R06-catcher_glove",
+      "crops/high/R05-catcher"
+    ],
+    "benchmark": "smb3-3, smb4-2, smb4-4",
+    "fix": "Billed caps, ear-flap helmets, soled cleats, pocketed/webbed glove, straps and padding on existing catcher chest panel and shin pieces, jersey placket and sleeve hems. Test: each visible in its crop.",
+    "priority": 0.938,
+    "selected": false
+  },
+  {
+    "id": "G-blocking-slab",
+    "category": "environment",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS4",
+    "evidence": [
+      "high/desktop/R07",
+      "high/mobile/R07",
+      "high/desktop/R01"
+    ],
+    "fix": "Remove or occluder-fade the grey slab in field and title cameras; texture stand boxes. Test: no slab in high/desktop/R07 or high/mobile/R07.",
+    "priority": 0.75,
+    "selected": false
+  },
+  {
+    "id": "G-framing",
+    "category": "readability",
+    "expectedGain": 1,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS5",
+    "evidence": [
+      "high/desktop/R07",
+      "strips/high/R08",
+      "high/mobile/R07",
+      "high/desktop/R16"
+    ],
+    "benchmark": "smb3-1, backyard97-1",
+    "fix": "Field cameras with fielders >= 30 px and destination bases in frame. Test: fielder with the ball identifiable in every R07/R08 strip frame; corner bases visible in high/mobile/R07.",
+    "priority": 0.75,
+    "selected": false
+  },
+  {
+    "id": "G-phone",
+    "category": "mobile",
+    "expectedGain": 1,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS7",
+    "evidence": [
+      "high/landscape/R02",
+      "high/landscape/R05",
+      "high/mobile/R05",
+      "high/mobile/R07"
+    ],
+    "benchmark": "backyard97-1",
+    "fix": "Orientation-specific cameras; landscape HUD chrome <= 20% of height; matchup line kept in landscape; keyboard hints hidden on touch.",
+    "priority": 0.75,
+    "selected": false
+  },
+  {
+    "id": "G-crowd-scale",
+    "category": "environment",
+    "expectedGain": 0.75,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS4",
+    "evidence": [
+      "high/desktop/R05",
+      "high/desktop/R17",
+      "high/mobile/R05"
+    ],
+    "benchmark": "smb3-1, smb4-3",
+    "fix": "Instanced impostor fans at correct scale replace the photo card. Test: fans behind home <= 1.2x player height in high/desktop/R05 and R17.",
+    "priority": 0.563,
+    "selected": false
+  },
+  {
+    "id": "G-light",
+    "category": "lighting",
+    "expectedGain": 0.75,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS3",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "high/desktop/R13",
+      "high/desktop/R12"
+    ],
+    "benchmark": "smb3-3, smb3-4, smb4-1",
+    "fix": "Hemisphere/rim fill with lifted floor for dark skin and uniforms, contact AO under feet (after G-foot-grounding), tower light pools at night, softer treeline. Test: facial planes clear in R02-batter_head; pools under towers in R13.",
+    "priority": 0.563,
+    "selected": false
+  },
+  {
+    "id": "G-hud",
+    "category": "ui",
+    "expectedGain": 0.75,
+    "severity": 2,
+    "effort": "M",
+    "workstream": "WS7",
+    "evidence": [
+      "high/desktop/R02",
+      "high/desktop/R05",
+      "high/landscape/R10"
+    ],
+    "benchmark": "smb3-1, ootp26-1",
+    "fix": "Compact score bug with line score, labelled pips, result banners with headline plus detail line; HUD chrome under 15% of desktop height.",
+    "priority": 0.563,
+    "selected": false
+  }
+]

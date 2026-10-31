@@ -6,7 +6,7 @@ import { PARKS, BASES, spots, FIELD_POS, fenceDist, polar } from './park.js';
 import { pitchPoint, RELEASE } from './pitch.js';
 import { ballAt } from './flight.js';
 import { setThree as setW, buildPark, lookFor, drawScoreboard, W3, glowTex as glowTex3 } from './world3d.js';
-import { setThree as setA, loadActors, makeActor, dress, pose, place, setAcc, setNumber, boneWorld, clipDur, showRegions } from './actors3d.js';
+import { setThree as setA, loadActors, loadPlayers, makeActor, useV3, setLod, setShadow, dress, pose, place, setAcc, setNumber, boneWorld, clipDur, showRegions } from './actors3d.js';
 import { timelineBall } from './render.js';
 
 let T = null;
@@ -34,7 +34,9 @@ export async function init3d(stage, onReady, art = []) {
   R3.loading = true;
   try {
     if (!window.THREE) await loadScript('vendor/three-r186.min.js');
-    if (!window.DS_MODELS) await loadScript('assets/models.js');
+    // ?players=<pack> swaps in another player pack (the phase-2 ceiling ladder: assets/ceiling-*.js)
+    const pk = param('players');
+    if (!window.DS_MODELS) await loadScript(pk && /^[\w-]+$/.test(pk) ? `assets/${pk}.js` : 'assets/models.js');
     T = window.THREE; setW(T); setA(T);
     // from file:// local images taint canvases and WebGL refuses them, so use the data-URL pack there
     if (location.protocol === 'file:' && art.length && param('art') !== '0' && !window.DS_ART) await loadScript('assets/art.js').catch(() => {});
@@ -59,12 +61,15 @@ export async function init3d(stage, onReady, art = []) {
     R3.cam = new T.PerspectiveCamera(30, 1, 0.5, 12000);
     // lights
     R3.hemi = new T.HemisphereLight('#ffffff', '#445533', 1); R3.scene.add(R3.hemi);
+    // a soft fill from the camera's side (no shadows): faces and dark uniforms keep their form against the sun
+    R3.fill = new T.DirectionalLight('#FFF4E6', 0.4); R3.scene.add(R3.fill); R3.scene.add(R3.fill.target);
     R3.sun = new T.DirectionalLight('#ffffff', 2.5); R3.sun.castShadow = r.shadowMap.enabled;
     R3.sun.shadow.mapSize.set(R3.quality === 'high' ? 2048 : 1024, R3.quality === 'high' ? 2048 : 1024);
-    R3.sun.shadow.bias = -0.0004; R3.sun.shadow.normalBias = 0.4;
+    R3.sun.shadow.bias = -0.0003; R3.sun.shadow.normalBias = 0.06; // a large normal bias detaches shadows from the feet
     R3.scene.add(R3.sun); R3.scene.add(R3.sun.target);
     // actors: 9 fielders, batter, 3 runners, umpire, two base coaches
-    for (let i = 0; i < 16; i++) R3.actors.push(makeActor(R3.scene));
+    for (let i = 0; i < 16; i++) R3.actors.push(makeActor(R3.scene, i));
+    if (+param('tex') > 0) detailMaps(+param('tex')); // ceiling test: what texture detail on every player costs
     // ball, its shadow and trail
     const seam = document.createElement('canvas'); seam.width = 128; seam.height = 64; const sx = seam.getContext('2d');
     sx.fillStyle = '#FBFBF5'; sx.fillRect(0, 0, 128, 64); sx.strokeStyle = '#C8452B'; sx.lineWidth = 3;
@@ -76,6 +81,10 @@ export async function init3d(stage, onReady, art = []) {
     const gr = shx.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); shx.fillStyle = gr; shx.fillRect(0, 0, 64, 64);
     R3.ballShadow = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: new T.CanvasTexture(sh), transparent: true, depthWrite: false }));
     R3.ballShadow.rotation.x = -Math.PI / 2; R3.scene.add(R3.ballShadow);
+    // contact shadows: a soft dark spot under each foot (two per actor, one instanced draw), shrinking as a foot lifts
+    const cg = new T.PlaneGeometry(1, 1); cg.rotateX(-Math.PI / 2);
+    R3.contact = new T.InstancedMesh(cg, new T.MeshBasicMaterial({ map: R3.ballShadow.material.map, color: '#000000', transparent: true, opacity: 0.55, depthWrite: false, fog: false }), 32);
+    R3.contact.frustumCulled = false; R3.contact.renderOrder = 1; R3.scene.add(R3.contact);
     const N = 28, tg = new T.BufferGeometry();
     tg.setAttribute('position', new T.Float32BufferAttribute(new Float32Array(N * 2 * 3), 3));
     tg.setAttribute('color', new T.Float32BufferAttribute(new Float32Array(N * 2 * 4), 4));
@@ -94,6 +103,8 @@ export async function init3d(stage, onReady, art = []) {
     window.__R3 = R3; // debug handle (renderer stats in tools/shots3d.mjs)
     resize3d();
     onReady && onReady();
+    R3.onPlayers = onReady;
+    loadPlayerPack();
   } catch (e) {
     R3.loading = false; R3.failed = true; R3.reason = String(e && e.message || e);
     const c = document.getElementById('gl'); if (c) c.remove();
@@ -109,6 +120,62 @@ export function resize3d() {
   R3.renderer.setPixelRatio(Math.min(dprMax, window.devicePixelRatio || 1));
   R3.renderer.setSize(R3.W, R3.H, false);
   R3.cam.aspect = R3.W / R3.H; R3.cam.updateProjectionMatrix();
+}
+
+// ---------------------------------------------------------------- v3 players
+// The realistic players arrive after the game is up: assets/players-<tier>.js (medium: the two coarser levels and
+// 1k skin maps; high: all three and 2k maps). Until then, and on the low tier, everyone is the v2 player.
+// tools/pack-players.mjs lists the packs it built in DS_MODELS.packs, so the game never asks for a missing file.
+export async function loadPlayerPack() {
+  const tier = R3.quality === 'high' ? 'high' : 'medium', packs = (window.DS_MODELS && window.DS_MODELS.packs) || [];
+  if (R3.quality === 'low' || param('v3') === '0' || param('players') || !packs.includes(tier) || R3.playersLoading) return;
+  R3.playersLoading = true;
+  try {
+    if (!window.DS_PLAYERS || window.DS_PLAYERS.tier !== tier) await loadScript(`assets/players-${tier}.js`);
+    await loadPlayers(window.DS_PLAYERS);
+    R3.v3 = tier;
+    applyPlayers();
+    try { R3.renderer.compile(R3.scene, R3.cam); } catch (e) { /* compiled lazily instead */ }
+    R3.onPlayers && R3.onPlayers();
+  } catch (e) { R3.v3err = String(e && e.message || e); }
+  R3.playersLoading = false;
+}
+// The tier decides who gets v3 bodies and how fine they may get (lodMax).
+function applyPlayers() {
+  const on = !!R3.v3 && R3.quality !== 'low';
+  for (const a of R3.actors) { useV3(a, on); a.lodMax = R3.quality === 'high' ? 0 : 1; }
+}
+// Contact shadows under the feet of every visible player (feet: ankle and toe bones of each side).
+const CF = [['foot_l', 'ball_l', 'footL'], ['foot_r', 'ball_r', 'footR']];
+function contactPass() {
+  const m = new T.Matrix4(), p = new T.Vector3(), q = new T.Vector3(), g = new T.Vector3(), one = new T.Quaternion();
+  let n = 0;
+  for (const a of R3.actors) {
+    if (!a.wrap.visible || !a.mesh || !a.mesh.castShadow) continue;
+    a.wrap.getWorldPosition(g);
+    for (const [ank, toe, v2] of CF) {
+      const b = a.bones[ank] || a.bones[v2], t = a.bones[toe];
+      if (!b) continue;
+      b.getWorldPosition(p); if (t) { t.getWorldPosition(q); p.add(q).multiplyScalar(0.5); }
+      const lift = Math.max(0, p.y - g.y - 0.2), s = Math.max(0, 1.3 - lift * 0.9);
+      if (s <= 0.05) continue;
+      m.compose(new T.Vector3(p.x, g.y + 0.06, p.z), one, new T.Vector3(s, 1, s * 1.5));
+      R3.contact.setMatrixAt(n++, m);
+    }
+  }
+  R3.contact.count = n; R3.contact.instanceMatrix.needsUpdate = true;
+}
+// Detail by on-screen height: a player taller than LOD_PX[0] px on screen gets LOD0, taller than LOD_PX[1] LOD1. From
+// tools/fidelity.mjs: LOD1 stays within ~4 points of LOD0's pixel error from 360 px down; LOD2 only pays off when tiny.
+export const LOD_PX = [200, 45];
+function lodPass() {
+  const f = (R3.H / 2) / Math.tan(R3.cam.fov * Math.PI / 360), p = new T.Vector3();
+  for (const a of R3.actors) {
+    if (!a.wrap.visible || !a.v3) continue;
+    a.wrap.getWorldPosition(p); p.y += 3;
+    const px = 6.2 * f / Math.max(0.1, p.distanceTo(R3.cam.position));
+    setLod(a, px > LOD_PX[0] ? 0 : px > LOD_PX[1] ? 1 : 2);
+  }
 }
 
 // ---------------------------------------------------------------- park + lights
@@ -138,7 +205,8 @@ function aimSun(cx, cz, span) {
 const g2t = (x, y, z = 0) => new T.Vector3(x, z, -y);
 const lerp = (a, b, u) => a + (b - a) * u;
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
-const amb = () => (performance.now() - R3.t0) / 1000;
+// ambient time (idle sways, water): wall clock, unless a capture froze it (__game.act('clock', ms))
+const amb = () => (R3.frozen != null ? R3.frozen : performance.now() - R3.t0) / 1000;
 function teamsOf(g) { const fT = g.half === 0 ? g.teams[0] : g.teams[1], bT = g.half === 0 ? g.teams[1] : g.teams[0]; return { fT, bT }; }
 function byId(g, id) { for (const t of g.teams) { const p = t.roster.find((q) => q.id === id); if (p) return p; } return null; }
 const UMP_KIT = { jersey: '#2A2F3A', trim: '#2A2F3A', pants: '#5A5E66', cap: '#1B1E26', sock: '#111111', num: '#FFFFFF' };
@@ -180,10 +248,37 @@ function placeBall(b, big = 1) {
   const px = (R3.H / 2) / Math.tan(R3.cam.fov * Math.PI / 360) / d * 0.25; // ball diameter in px at true size
   const s = Math.max(1, (big * 5) / Math.max(0.01, px)); // keep it at least ~5 px across
   R3.ball.scale.setScalar(s);
-  R3.ball.rotation.x += 0.4; R3.ball.rotation.z += 0.13;
+  R3.ball.rotation.set(b.y * 0.9, 0, b.x * 0.3); // spin from position, so a frame is reproducible
   R3.ballShadow.position.set(R3.ball.position.x, 0.08, R3.ball.position.z);
   const ss = 0.7 * s * (1 + Math.min(2, b.z / 30)); R3.ballShadow.scale.set(ss, ss, 1);
   R3.ballShadow.material.opacity = Math.max(0.15, 1 - b.z / 120);
+}
+// Two-bone arm IK: bend the elbow so shoulder-to-hand spans the target's distance, then swing the upper arm onto it.
+function ikArm(actor, side, target) {
+  const up = actor.bones[`upperarm${side}`], fo = actor.bones[`forearm${side}`], ha = actor.bones[`hand${side}`];
+  if (!up || !fo || !ha || actor.mirror) return; // mirrored (left-handed) rigs: rotations under a negative scale don't compose; skip
+  actor.wrap.updateMatrixWorld(true);
+  const S = new T.Vector3(), E = new T.Vector3(), W = new T.Vector3();
+  up.getWorldPosition(S); fo.getWorldPosition(E); ha.getWorldPosition(W);
+  const a = S.distanceTo(E), b = E.distanceTo(W), d = Math.max(Math.abs(a - b) + 1e-3, Math.min(a + b - 1e-3, S.distanceTo(target)));
+  const u = S.clone().sub(E), v = W.clone().sub(E), n = new T.Vector3().crossVectors(u, v);
+  if (n.lengthSq() < 1e-8) n.set(0, 0, 1); n.normalize();
+  const cur = u.angleTo(v), want = Math.acos(Math.max(-1, Math.min(1, (a * a + b * b - d * d) / (2 * a * b))));
+  const dq = new T.Quaternion().setFromAxisAngle(n, want - cur);
+  const pw = new T.Quaternion(); fo.parent.getWorldQuaternion(pw);
+  const bw = new T.Quaternion(); fo.getWorldQuaternion(bw);
+  fo.quaternion.copy(pw.invert().multiply(dq).multiply(bw));
+  fo.updateMatrixWorld(true);
+  reachArm(actor, side, target, 1);
+}
+// The batter's free (left) hand on the handle, just below the right hand on the bat's axis.
+function gripBat(actor) {
+  const bat = actor.bones.bat;
+  if (!bat || !actor.v3) return;
+  actor.wrap.updateMatrixWorld(true);
+  const h = new T.Vector3(), q = new T.Quaternion(); bat.getWorldPosition(h); bat.getWorldQuaternion(q);
+  const ax = new T.Vector3(0, 1, 0).applyQuaternion(q); // bone axis (glTF bones point along +Y)
+  ikArm(actor, 'L', h.addScaledVector(ax, -0.22));
 }
 // Rotate a 2-bone arm's upper bone so its hand moves toward a world target.
 function reachArm(actor, side, target, amount = 1) {
@@ -271,7 +366,7 @@ function stageFielders(g, park, fT, poseFor) {
   const sp = spots(park);
   FIELD_POS.forEach((pos, i) => {
     const a = R3.actors[i], P = fT.roster[i === 0 ? fT.pitcher : i - 1] || fT.roster[0];
-    show(a, true); dress(a, fT.kit, { skin: P.skin });
+    show(a, true); dress(a, fT.kit, { skin: P.skin, id: P.id });
     setNumber(a, P.num, fT.kit, fT.team);
     poseFor(a, pos, i, sp[pos], P);
   });
@@ -298,7 +393,7 @@ function duelScene(g, ui) {
     } else if (pos === 'C') {
       setAcc(a, ['helmet', 'mask', 'gear', 'shinguard.L', 'shinguard.R', 'glove']);
       showRegions(a, cfCam ? null : ['glove']); // catcher's-eye view: only the mitt, first person
-      a.mesh.castShadow = cfCam;
+      setShadow(a, cfCam);
       place(a, 0, -2.6, 0, 0, 60, false);
       pose(a, 'crouch', tA + 0.3);
       // the mitt rides to the pitch as it arrives; in the catcher's-eye view it only appears for the catch
@@ -318,7 +413,7 @@ function duelScene(g, ui) {
   });
   // batter
   const B = bT.roster[bT.lineup[bT.order]];
-  const bat = R3.actors[9]; show(bat, true); dress(bat, bT.kit, { skin: B.skin });
+  const bat = R3.actors[9]; show(bat, true); dress(bat, bT.kit, { skin: B.skin, id: B.id });
   const club = !!bT.team.club; // 1900s-style barnstorming clubs bat in caps: helmets came decades later
   setAcc(bat, [club ? 'cap' : 'helmet', 'bat']);
   const side = B.bats === 'L' ? 1 : -1;
@@ -335,12 +430,13 @@ function duelScene(g, ui) {
     const ct = g.phase === 'flight' ? (g.phaseT - st) * k : 0.9;
     if (ct < 0) pose(bat, 'bat_stance', tA); else pose(bat, 'bat_swing', ct);
   } else pose(bat, 'bat_stance', tA);
+  gripBat(bat);
   setNumber(bat, B.num, bT.kit, bT.team);
   // runners on base, leading off toward the next base
   for (let k = 0; k < 3; k++) {
     const a = R3.actors[10 + k], id = g.bases[k];
     if (!id) { show(a, false); continue; }
-    const P = byId(g, id) || B; show(a, true); dress(a, bT.kit, { skin: P.skin }); setAcc(a, [club ? 'cap' : 'helmet']); setNumber(a, P.num, bT.kit, bT.team);
+    const P = byId(g, id) || B; show(a, true); dress(a, bT.kit, { skin: P.skin, id: P.id }); setAcc(a, [club ? 'cap' : 'helmet']); setNumber(a, P.num, bT.kit, bT.team);
     const b0 = BASES[k + 1], b1 = BASES[(k + 2) % 4], lead = k === 2 ? 6 : 10;
     const L = Math.hypot(b1[0] - b0[0], b1[1] - b0[1]);
     const x = b0[0] + (b1[0] - b0[0]) / L * lead, y = b0[1] + (b1[1] - b0[1]) / L * lead;
@@ -351,7 +447,7 @@ function duelScene(g, ui) {
   place(u, side * 0.7, -5.8, 0, 0, 60, false); pose(u, 'ump', tA); // looks over the catcher's inside shoulder
   show(u, cfCam);
   for (const [i, s] of [[14, -1], [15, 1]]) {
-    const a = R3.actors[i], P = bT.roster[(i * 3) % bT.roster.length]; show(a, true); dress(a, bT.kit, { skin: P.skin }); setAcc(a, ['cap']);
+    const a = R3.actors[i], P = bT.roster[(i * 3) % bT.roster.length]; show(a, true); dress(a, bT.kit, { skin: P.skin, id: P.id }); setAcc(a, ['cap']);
     place(a, s * 82, 66, 0, 0, 0, false); pose(a, 'idle', tA + i);
   }
   // the pitch
@@ -419,12 +515,12 @@ function fieldScene(g, ui) {
     if (!id) { show(a, false); continue; }
     const r = runnerAt(tl.runners[id], t);
     if (r.gone) { show(a, false); continue; }
-    const P = byId(g, id) || bT.roster[0]; show(a, true); dress(a, bT.kit, { skin: P.skin }); setAcc(a, [bT.team.club ? 'cap' : 'helmet']);
+    const P = byId(g, id) || bT.roster[0]; show(a, true); dress(a, bT.kit, { skin: P.skin, id: P.id }); setAcc(a, [bT.team.club ? 'cap' : 'helmet']);
     const keys = tl.runners[id];
     if (keys[0].b === 0 && t < 0.5 && !keys[0].out) { // the batter finishes the swing before he runs
       const L = P.bats === 'L', side = L ? 1 : -1;
       setAcc(a, [bT.team.club ? 'cap' : 'helmet', 'bat']);
-      place(a, side * 3, 0.3, 0, 0, 0.3, L); pose(a, g.play.res && g.play.res.bunt ? 'bat_bunt' : 'bat_swing', 0.27 + t * 1.3);
+      place(a, side * 3, 0.3, 0, 0, 0.3, L); pose(a, g.play.res && g.play.res.bunt ? 'bat_bunt' : 'bat_swing', 0.27 + t * 1.3); gripBat(a);
       setNumber(a, P.num, bT.kit, bT.team);
       continue;
     }
@@ -466,7 +562,7 @@ function titleScene(t) {
   const park = PARKS.home, sp = spots(park), tA = amb();
   const kit = { jersey: '#F4F1EA', trim: '#8E2F1F', pants: '#F4F1EA', cap: '#8E2F1F', sock: '#8E2F1F', num: '#8E2F1F' };
   FIELD_POS.forEach((pos, i) => {
-    const a = R3.actors[i]; show(a, true); dress(a, kit, { skin: ['#F1C9A5', '#C68863', '#7D4A2A', '#E0AC86'][i % 4] });
+    const a = R3.actors[i]; show(a, true); dress(a, kit, { skin: ['#F1C9A5', '#C68863', '#7D4A2A', '#E0AC86'][i % 4], id: `title-${i}` });
     setAcc(a, pos === 'C' ? ['helmet', 'mask', 'gear', 'shinguard.L', 'shinguard.R', 'glove'] : ['cap', 'glove']);
     place(a, sp[pos][0], sp[pos][1], pos === 'P' ? 0.8 : 0, 0, 0, false);
     pose(a, pos === 'C' ? 'crouch' : pos === 'P' ? 'pitch' : 'ready', pos === 'P' ? (tA % 3) * 0.5 : tA + i * 0.37);
@@ -504,7 +600,8 @@ function runnerAt(keys, t) {
 const GOV = { last: 0, d: [], until: 0 };
 function govern() {
   const now = performance.now(), dt = now - GOV.last; GOV.last = now;
-  if (param('q') || R3.quality === 'low' || dt > 250) { GOV.d.length = 0; return; }
+  // frames over 0.2 s are test steps or tab switches, not the device's pace; a frozen clock means a capture
+  if (param('q') || R3.quality === 'low' || R3.frozen != null || R3.pinned || dt > 200) { GOV.d.length = 0; return; }
   GOV.d.push(dt);
   if (GOV.d.length < 150 || now < GOV.until) return;
   const s = GOV.d.slice().sort((a, b) => a - b), med = s[s.length >> 1];
@@ -516,6 +613,8 @@ export function setQuality(q) {
   const sh = q !== 'low';
   if (R3.renderer.shadowMap.enabled !== sh) { R3.renderer.shadowMap.enabled = sh; R3.scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); }); }
   R3.sun.castShadow = sh;
+  applyPlayers();
+  if (q !== 'low' && !R3.v3) loadPlayerPack();
   const ms = q === 'high' ? 2048 : 1024;
   if (R3.sun.shadow.mapSize.x !== ms) { R3.sun.shadow.mapSize.set(ms, ms); if (R3.sun.shadow.map) { R3.sun.shadow.map.dispose(); R3.sun.shadow.map = null; } }
   resize3d();
@@ -523,6 +622,7 @@ export function setQuality(q) {
 
 export function render3d(mode, g, ui, titleT = 0) {
   if (!R3.ok) return false;
+  const cpu0 = performance.now();
   govern();
   R3.splash.visible = R3.ripple.visible = R3.flash.visible = false;
   if (R3.W !== Math.round(R3.canvas.parentElement.getBoundingClientRect().width)) resize3d();
@@ -533,7 +633,23 @@ export function render3d(mode, g, ui, titleT = 0) {
     drawScoreboard(R3.park.board, { home: g.teams[0].team.abbr, away: g.teams[1].team.abbr, hs: g.teams[0].score, as: g.teams[1].score, inn: g.inning, top: g.half === 0, b: g.balls, s: g.strikes, o: g.outs });
   }
   if (W3.water) W3.water.color.setHSL(0.52, 0.27, 0.4 + 0.02 * Math.sin(amb() * 2));
+  if (R3.look) closeCamera(R3.look);
+  { const f = R3.fill, c = R3.cam; f.position.copy(c.position).add(new T.Vector3(0, 30, 0)); c.getWorldDirection(f.target.position); f.target.position.multiplyScalar(100).add(c.position); f.intensity = 0.22 * R3.sun.intensity; }
+  // structures the camera sits behind (the press box, from the high-home field camera) would fill the frame: hide them
+  if (R3.park && R3.park.camHide) {
+    const cd = Math.hypot(R3.cam.position.x, R3.cam.position.z), p = new T.Vector3();
+    for (const o of R3.park.camHide) {
+      o.getWorldPosition(p); const pd = Math.hypot(p.x, p.z);
+      const behind = (R3.cam.position.x * p.x + R3.cam.position.z * p.z) / Math.max(1, cd * pd) > 0.8 && cd > pd - 8; // same side of home, farther out
+      o.visible = !(behind && R3.cam.position.y > 15);
+    }
+  }
+  lodPass();
+  contactPass();
+  gpuTimer(true);
   R3.renderer.render(R3.scene, R3.cam);
+  gpuTimer(false);
+  R3.cpuMs = performance.now() - cpu0;
   R3.view = mode;
   R3.visible = R3.actors.filter((a) => a.wrap.visible).length;
   return true;
@@ -556,5 +672,71 @@ export function screenToPlate3(sx, sy) {
   const pl = new T.Plane(new T.Vector3(0, 0, 1), 0), hit = new T.Vector3();
   if (!ray.ray.intersectPlane(pl, hit)) return { x: 0, z: 2.5 };
   return { x: hit.x, z: hit.y };
+}
+// ---------------------------------------------------------------- review and profiling hooks
+// Synthetic albedo-detail and normal maps of a given size on every player (measurement only, ?tex=1024).
+function detailMaps(n) {
+  const c = document.createElement('canvas'); c.width = c.height = n; const x = c.getContext('2d'), d = x.createImageData(n, n);
+  for (let i = 0; i < n * n; i++) { const v = 200 + ((i * 2654435761) >>> 24) % 56; d.data.set([v, v, v, 255], i * 4); }
+  x.putImageData(d, 0, 0);
+  const map = new T.CanvasTexture(c); map.colorSpace = T.SRGBColorSpace; map.generateMipmaps = true; map.anisotropy = 4;
+  const nc = document.createElement('canvas'); nc.width = nc.height = n; const nx = nc.getContext('2d'); nx.fillStyle = '#8080FF'; nx.fillRect(0, 0, n, n);
+  for (let i = 0; i < 400; i++) { nx.fillStyle = `rgb(${110 + (i * 37) % 40},${110 + (i * 53) % 40},255)`; nx.fillRect((i * 97) % n, (i * 61) % n, n / 32, n / 32); }
+  const nmap = new T.CanvasTexture(nc);
+  for (const a of R3.actors) { a.mat.map = map; a.mat.normalMap = nmap; a.mat.needsUpdate = true; }
+}
+// Close-up camera (captures): frames one actor, or one part of it, `width` feet across, from `yaw`
+// radians around its facing (0 = in front) and `pitch` radians above. Targets: a role (pitcher,
+// catcher, 1B … RF, batter, runner1-3, ump) or an actor index, with an optional part:
+// body, head, hands, feet, bat, glove ('batter:hands').
+const ROLE = { pitcher: 0, catcher: 1, '1B': 2, '2B': 3, SS: 4, '3B': 5, LF: 6, CF: 7, RF: 8, batter: 9, runner1: 10, runner2: 11, runner3: 12, ump: 13 };
+const PART = { head: ['head'], hands: ['hand.L', 'hand.R'], feet: ['foot.L', 'foot.R'], bat: ['bat'], glove: ['glove'] };
+export function camLook(target, width = 8, pitch = 0.12, yaw = 0.5) {
+  if (!target) { R3.look = null; return true; }
+  const [who, part = 'body'] = String(target).split(':');
+  const a = R3.actors[ROLE[who] ?? +who];
+  if (!a || !a.wrap.visible) return false;
+  R3.look = { a, part, width, pitch, yaw };
+  return true;
+}
+function closeCamera(L) {
+  const a = L.a; a.wrap.updateMatrixWorld(true);
+  const p = new T.Vector3();
+  if (PART[L.part]) { const v = new T.Vector3(); for (const n of PART[L.part]) p.add(boneWorld(a, n, v)); p.divideScalar(PART[L.part].length); }
+  else { a.wrap.getWorldPosition(p); p.y += 3.1; }
+  const fov = 30, dist = (L.width / 2) / Math.tan(fov * Math.PI / 360) / Math.min(1, R3.W / R3.H);
+  const face = a.wrap.rotation.y + L.yaw; // the model faces +Z at rest
+  const c = R3.cam; c.fov = fov;
+  c.position.set(p.x + Math.sin(face) * Math.cos(L.pitch) * dist, p.y + Math.sin(L.pitch) * dist, p.z + Math.cos(face) * Math.cos(L.pitch) * dist);
+  c.lookAt(p); c.updateProjectionMatrix();
+}
+// The WebGL frame alone (no 2D overlay or HUD) as a PNG data URL, rendered now: read back in the same task.
+export function glShot() {
+  if (!R3.ok) return null;
+  R3.renderer.render(R3.scene, R3.cam);
+  return R3.canvas.toDataURL('image/png');
+}
+// GPU time per frame from EXT_disjoint_timer_query_webgl2 (when the browser exposes it).
+const GT = { ext: undefined, q: [], ms: [] };
+function gpuTimer(start) {
+  if (!R3.profile) return;
+  const gl = R3.renderer.getContext();
+  if (GT.ext === undefined) GT.ext = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  if (!GT.ext) return;
+  if (start) {
+    for (let i = GT.q.length - 1; i >= 0; i--) { const q = GT.q[i]; if (gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE)) { if (!gl.getParameter(GT.ext.GPU_DISJOINT_EXT)) GT.ms.push(gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6); gl.deleteQuery(q); GT.q.splice(i, 1); } }
+    if (GT.ms.length > 120) GT.ms.splice(0, GT.ms.length - 120);
+    GT.cur = gl.createQuery(); gl.beginQuery(GT.ext.TIME_ELAPSED_EXT, GT.cur);
+  } else if (GT.cur) { gl.endQuery(GT.ext.TIME_ELAPSED_EXT); GT.q.push(GT.cur); GT.cur = null; }
+}
+// Profiling on/off; returns the mean GPU ms of the recent frames (null when unsupported).
+export function gfxProfile(on = true) {
+  R3.profile = on; const ms = GT.ms.slice(); GT.ms.length = 0;
+  return { supported: GT.ext ? true : GT.ext === undefined ? null : false, frames: ms.length, all: ms.length ? +(ms.reduce((s, x) => s + x, 0) / ms.length).toFixed(3) : null };
+}
+export function gfxInfo() {
+  const i = R3.renderer ? R3.renderer.info : null;
+  return { ok: R3.ok, quality: R3.quality, soft: !!R3.soft, renderer: R3.gpu || '', calls: i ? i.render.calls : 0, tris: i ? i.render.triangles : 0,
+    geometries: i ? i.memory.geometries : 0, textures: i ? i.memory.textures : 0, programs: i && i.programs ? i.programs.length : 0, cpuMs: +(R3.cpuMs || 0).toFixed(2), actors: R3.visible || 0, governed: R3.governed || 0 };
 }
 export { RELEASE, polar, fenceDist };
