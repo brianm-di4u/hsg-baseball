@@ -507,6 +507,7 @@ function fieldScene(g, ui) {
   const b = timelineBall(tl, t);
   // who threw / caught
   const thr = tl.throws.find((th) => t >= th.t0 - 0.45 && t <= th.t0 + 0.4);
+  let carry = null; // [actor, bone]: the ball is drawn there, not at the sim's point (which sits at the fielder's feet)
   stageFielders(g, park, fT, (a, pos, i, xy, P) => {
     setAcc(a, pos === 'C' ? ['helmet', 'mask', 'gear', 'shinguard.L', 'shinguard.R', 'glove'] : ['cap', 'glove']);
     const path = tl.fielders[pos];
@@ -519,12 +520,14 @@ function fieldScene(g, ui) {
     if (throwing) {
       place(a, p.x, p.y, 0, thr.to[0], thr.to[1], P.throws === 'L');
       pose(a, 'throw', 0.333 + (t - thr.t0));
+      if (t < thr.t0) carry = [a, 'hand.R']; // in the throwing hand until release
     } else if (hold) {
       place(a, p.x, p.y, 0, 0, 0, P.throws === 'L');
       const high = (ballAt({ s: tl.ball }, hold.t0).z || 0) > 3.5;
       pose(a, high ? 'catch_high' : 'field_ground', 0.2 + (t - hold.t0 + 0.35) * 0.9);
       // the glove goes to the ball as it arrives (two-bone IK on the glove arm), then stays with it
       if (t < hold.t0 + 0.15) { const bp = g2t(b.x, b.y, Math.max(0.3, b.z)), gp = boneWorld(a, 'glove'); if (bp.distanceTo(gp) < 7) ikArm(a, 'L', bp); }
+      if (t >= hold.t0) carry = [a, 'glove']; // caught: in the mitt
     } else if (sp > 1.5) {
       place(a, p.x, p.y, 0, p.x + vx, p.y + vy, false);
       pose(a, 'run', t * Math.min(1.25, sp / 18) + i * 0.1);
@@ -532,6 +535,7 @@ function fieldScene(g, ui) {
       place(a, p.x, p.y, pos === 'P' ? 0.8 : 0, b.x, b.y, P.throws === 'L');
       pose(a, pos === 'C' ? 'crouch' : 'ready', tA + i * 0.37, pos === 'C' ? null : null);
     }
+    if (hasBall && !carry && !throwing) carry = [a, 'glove'];
   });
   // runners (the batter is one of them)
   const ids = Object.keys(tl.runners);
@@ -576,7 +580,8 @@ function fieldScene(g, ui) {
   R3.flash.visible = t < 0.18 && !g.play.res.bunt;
   if (R3.flash.visible) { const u = t / 0.18; R3.flash.position.copy(g2t(0, 1.2, 2.8)); R3.flash.scale.setScalar(3 + u * 7); R3.flash.material.opacity = 1 - u; }
   // ball + trail
-  placeBall(ts >= 0 ? null : b, 1.6);
+  const held = carry && boneWorld(carry[0], carry[1]);
+  placeBall(ts >= 0 ? null : held ? { x: held.x, y: -held.z, z: held.y } : b, 1.6);
   const pts = []; for (let k = 10; k >= 0; k--) { const q = timelineBall(tl, Math.max(0, t - k * 0.035)); pts.push(g2t(q.x, q.y, q.z)); }
   setTrail(b.z > 1 ? pts : null);
 }

@@ -1,0 +1,191 @@
+[
+  {
+    "id": "G-batting-helmet-fit",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R16-runner1",
+      "crops/high/R08-CF"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Raise batting-helmet and cap brims so the lower edge clears the brow by >= 0.05 ft, close the ear flap's front edge into a shell, brim roughness >= 0.5. Test: both eyes visible and no brim pixel > 230/255 in R02-batter_head; no black eye band in R08-CF and R16-runner1.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-kit-cloth",
+    "category": "characters",
+    "expectedGain": 0.75,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R08-CF"
+    ],
+    "benchmark": "smb4-2; art-src/samples/reference-renders/si_jersey_front.png",
+    "fix": "Bake fold/seam/AO normal maps (elbow, knee, crotch, belt), a button placket with >= 5 buttons, sleeve hem, belt loops and buckle, sewn V collar; matte cloth roughness ~0.8. Test: >= 3 fold lines per pant leg and visible buttons in R08-CF and R17-pitcher_hands.",
+    "priority": 0.703,
+    "selected": true
+  },
+  {
+    "id": "G-torso-volume",
+    "category": "charfit",
+    "expectedGain": 0.75,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R08-CF",
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R12-pitcher"
+    ],
+    "benchmark": "art-src/samples/reference-renders/mpfb2_athlete_three_quarter.png",
+    "fix": "Shrink the jersey shoulder/deltoid/upper-arm offset toward the reference, lengthen the visible neck, remove the chest bulges. Test: shoulder:head width in R08-CF within 10% of the reference; no twin chest highlights in R17-pitcher_hands.",
+    "priority": 0.703,
+    "selected": true
+  },
+  {
+    "id": "G-decal-layering",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R08-CF",
+      "crops/high/R02-batter_hands"
+    ],
+    "fix": "Composite front lettering above the placket piping (or stop the piping at the lettering band) and shrink the word to the chest region visible in bent poses. Test: LAKE HAMILTON, LAKESIDE and HOT SPRINGS read in full in R17-pitcher_hands, R08-CF and R02-batter_hands.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-ump-catcher-gear",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R05-ump_head",
+      "crops/high/R06-catcher_glove"
+    ],
+    "fix": "Bind the mask cage to the head bone, bounded chin to brow in the crouch pose too; close the umpire's neck/shoulder skin gap with a collar; add segmented plates and straps to the catcher's chest protector and knee caps to the shin guards. Test: R05-ump_head and R06-catcher_glove.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-stance-feet",
+    "category": "animation",
+    "expectedGain": 0.3,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R05-batter_feet"
+    ],
+    "fix": "Run foot-plant IK during the batting stance on high and medium so the soles sit within 0.02 ft of the dirt. Test: no sole-to-shadow gap in R05-batter_feet.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-catch-contact",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R07"
+    ],
+    "fix": "Glove-hand IK toward the predicted ball position over the last 0.25 s of a fielding clip, and parent the ball to the glove on the catch frame. Test: ball inside the glove by frame 8 of strips/high/R07, captured without a camera cut.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-glove-model",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R06-catcher_glove",
+      "crops/high/R17-pitcher_hands"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Model a glove with web, pocket, heel, finger stalls and lacing, plus leather normal and roughness maps. Test: web and lacing visible in R06-catcher_glove and R17-pitcher_hands.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-swing-load-stride",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R04"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Key a load (hands back) and a front-foot stride spanning >= 2 sampled frames before contact, and move contact in front of the plate. Test: front foot lifts and lands between frames 1-4 of strips/high/R04, with no single-sample pose swap.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-fielding-hr-camera",
+    "category": "readability",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS5",
+    "evidence": [
+      "high/desktop/R10",
+      "high/desktop/R09",
+      "high/mobile/R07"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "Frame fielding/HR cameras so the ball carrier is >= 60 px tall and the batter-runner stays in frame on the trot; give portrait fielding its own framing that keeps both corner bases and drops the empty foreground. Test: R10, R09 and mobile R07.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-tree-crowd",
+    "category": "environment",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS4",
+    "evidence": [
+      "high/desktop/R09",
+      "high/desktop/R05",
+      "high/desktop/R01"
+    ],
+    "benchmark": "smb4-3",
+    "fix": "Replace faceted cone/blob trees on high and medium with textured card/billboard trees matched to the backdrop palette; add seat rows and railings to the grey stand steps; break the crowd tile with >= 2 alternate tiles. Test: no faceted silhouettes in R09, no visible tile period in R05.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-phone-gpu-budget",
+    "category": "mobile",
+    "expectedGain": 0,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS6",
+    "evidence": [
+      "perf.json medium-mobile night gpuMs 1.33 (33 ms est.)",
+      "perf.json high-mobile grounder 1.973, gap 1.282"
+    ],
+    "fix": "Re-run perf-review 3x on medium-mobile unthrottled and report median gpuMs per scene; pass when the worst median <= 1.04 ms (<= 26 ms est.). If over, replace the discard-based headwear shadow-depth material with a separate headwear skinned submesh with castShadow=false, tighten the medium shadow-camera frustum, and re-measure.",
+    "priority": 0,
+    "selected": false
+  }
+]

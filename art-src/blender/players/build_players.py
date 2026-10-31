@@ -39,9 +39,9 @@ os.makedirs(OUT, exist_ok=True)
 
 # body builds: MPFB phenotype (0..1). High-school varsity: young adults, athletic.
 VARIANTS = {
-    'lean': dict(age=0.44, muscle=0.6, weight=0.36, height=0.72, proportions=0.88),  # ≈ 6 ft 3, rangy
-    'average': dict(age=0.46, muscle=0.75, weight=0.55, height=0.62, proportions=0.8),  # ≈ 6 ft 0
-    'stocky': dict(age=0.5, muscle=0.88, weight=0.9, height=0.5, proportions=0.66),  # ≈ 5 ft 8, heavy-set
+    'lean': dict(age=0.44, muscle=0.55, weight=0.36, height=0.72, proportions=0.88),  # ≈ 6 ft 3, rangy
+    'average': dict(age=0.46, muscle=0.68, weight=0.55, height=0.62, proportions=0.8),  # ≈ 6 ft 0
+    'stocky': dict(age=0.5, muscle=0.8, weight=0.9, height=0.5, proportions=0.66),  # ≈ 5 ft 8, heavy-set
 }
 
 addon_utils.enable('bl_ext.user_default.mpfb', default_set=True, persistent=True)
@@ -99,6 +99,7 @@ def bone_pos(rig, n, tail=False):
 
 # ------------------------------------------------------------------ 2. regions and the uniform
 DEFORM_SKIN = ('head', 'neck_01')
+NECK_R = 0.27  # half-width of the neck opening (ft): the neckline plane decides only inside it
 NECKLINE = ('neck_01', 'spine_03', 'clavicle_l', 'clavicle_r')  # faces on these follow the neckline plane
 BONES = set()  # the rig's bone names: MPFB meshes also carry non-bone groups (whole-body masks and the like)
 def dominant(o, v):
@@ -149,6 +150,8 @@ def dress_body(rig, body):
     nn = Vector((0, -0.35, 1)).normalized()
     for off in (0.0, -0.08):  # the neckline, and the lower edge of the collar band 0.08 ft below it
         cut(neck_zone, Vector((0, 0, z_collar)) + nn * off, nn)
+    for x in (NECK_R, NECK_R + 0.08):  # the opening's sides, and the band's
+        for sx in (-1, 1): cut(neck_zone, Vector((nk.x + sx * x, 0, 0)), Vector((1, 0, 0)))
     cut(lambda f: fbone(f).startswith('calf'), Vector((0, 0, z_pants)), Vector((0, 0, 1)))
     # the placket: two piping lines down the jersey front, either side of the centre line
     front = lambda f: torso(f) and f.normal.y < -0.2 and z_belt < f.calc_center_median().z < z_collar
@@ -171,8 +174,9 @@ def dress_body(rig, body):
         nk = bone_pos(rig, 'neck_01')
         near = (Vector((c.x, c.y)) - Vector((nk.x, nk.y))).length < 0.6 and abs(c.z - z_collar) < 0.5
         if (near or b in NECKLINE) and not b.startswith(('upperarm', 'lowerarm', 'hand', 'head')):
-            h = (c - Vector((0, 0, z_collar))).dot(Vector((0, -0.35, 1)).normalized())
-            if h > -0.08: regs.append(REG['skin'] if h > 0 else REG['trim']); continue  # skin above, the collar band
+            h = (c - Vector((0, 0, z_collar))).dot(Vector((0, -0.35, 1)).normalized()); dx = abs(c.x - nk.x)
+            if h > 0 and dx < NECK_R: regs.append(REG['skin']); continue  # the neck opening
+            if h > -0.08 and dx < NECK_R + 0.08: regs.append(REG['trim']); continue  # the collar band, round its sides too
             if b == 'neck_01': regs.append(REG['jersey']); continue  # below the band: cloth (other bones: the torso rules)
         if b == 'head' and c.z > z_scalp: regs.append(REG['hair']); continue  # the scalp: hidden under headwear, a close crop bareheaded
         if b.startswith(('hand', 'index', 'middle', 'ring', 'pinky', 'thumb')) or b in DEFORM_SKIN: regs.append(REG['skin']); continue
@@ -197,12 +201,15 @@ def dress_body(rig, body):
     loose = {REG['jersey'], REG['trim'], REG['pants'], REG['belt']}
     bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table(); bm.verts.ensure_lookup_table()
     cloth = [v for v in bm.verts if v.link_faces and all(regs[f.index] in loose for f in v.link_faces)]
-    for _ in range(22): bmesh.ops.smooth_vert(bm, verts=cloth, factor=0.6, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+    # over the shoulders the cloth hangs on the anatomy: heavy relaxing there bridges the trapezius into a pad and buries the neck
+    z_sh = sh_l.z - 0.25
+    yoke = lambda v: v.co.z > z_sh or abs(v.co.x) > abs(sh_l.x)
+    for k in range(22): bmesh.ops.smooth_vert(bm, verts=cloth if k < 5 else [v for v in cloth if not yoke(v)], factor=0.6, use_axis_x=True, use_axis_y=True, use_axis_z=True)
     bm.normal_update()
     off = []
     for v in bm.verts:
         ts = [thick.get(regs[f.index], 0.0) for f in v.link_faces]
-        t = sum(ts) / max(1, len(ts))
+        t = sum(ts) / max(1, len(ts)) * (0.6 if yoke(v) else 1.0)
         if z_pants < v.co.z < z_knee + 0.5 and any(regs[f.index] == REG['pants'] for f in v.link_faces): t += 0.03  # baggy over the knee
         off.append(v.normal * t)
     for v, o in zip(bm.verts, off): v.co += o
@@ -294,6 +301,7 @@ def make_cap(rig, body, helmet=False):
     c, rx, ry, top = head_frame(rig, body, 0.42 if helmet else 0.34)
     bm = bmesh.new()
     pad = 0.08 if helmet else 0.065  # clear of the scalp everywhere
+    lift = 0.12 if helmet else 0.04  # the band is low round the ears (helmet) and nape; the front rides up to the brow
     h = (top - c.z) + pad + 0.02
     rings, seg = 9, 36
     verts = []
@@ -302,7 +310,8 @@ def make_cap(rig, body, helmet=False):
         z = c.z + math.sin(a) * h
         k = math.cos(a)
         drop = (0.0 if helmet else 0.2) * (1 - i / rings)  # a cap sits lower at the back, over the nape
-        row = [bm.verts.new((c.x + math.cos(t) * (rx + pad) * k, c.y + math.sin(t) * (ry + pad) * k, z - drop * max(0.0, math.sin(t)))) for t in [j / seg * math.tau for j in range(seg)]] if i < rings else [bm.verts.new((c.x, c.y, z))]
+        rise = lift * (1 - i / rings)  # and higher at the front, the rim on the brow (the eyes stay clear)
+        row = [bm.verts.new((c.x + math.cos(t) * (rx + pad) * k, c.y + math.sin(t) * (ry + pad) * k, z - drop * max(0.0, math.sin(t)) + rise * max(0.0, -math.sin(t)) ** 1.5)) for t in [j / seg * math.tau for j in range(seg)]] if i < rings else [bm.verts.new((c.x, c.y, z))]
         verts.append(row)
     for i in range(rings - 1):
         for j in range(seg): bm.faces.new((verts[i][j], verts[i][(j + 1) % seg], verts[i + 1][(j + 1) % seg], verts[i + 1][j]))
@@ -316,20 +325,22 @@ def make_cap(rig, body, helmet=False):
         x = c.x + math.cos(t) * (rx + pad); y = c.y + math.sin(t) * (ry + pad)
         k = math.sin(t) ** 2  # full length at the front, tapering to nothing at the bill's corners
         ox = c.x + math.cos(t) * (rx + pad + blen * 0.25 * k); oy = c.y + math.sin(t) * (ry + pad + blen * k)
-        brim.append((bm.verts.new((x, y, z0)), bm.verts.new((ox, oy, z0 - 0.04))))
+        zr = z0 + lift * max(0.0, -math.sin(t)) ** 1.5
+        brim.append((bm.verts.new((x, y, zr)), bm.verts.new((ox, oy, zr - 0.04))))
     thin = []  # one-sided sheets, given thickness below
     for j in range(12):
         a, b = brim[j], brim[j + 1]
         thin.append(bm.faces.new((a[0], b[0], b[1], a[1])))
-    if helmet:  # ear flaps: the shell carries on down over each ear, curving in toward the jaw (rows below the band)
-        drop = [0.0, 0.14, 0.28, 0.4]
-        flap = [j for j in range(seg) if abs(math.cos(j / seg * math.tau)) > 0.55 and math.sin(j / seg * math.tau) > -0.45]
+    if helmet:  # the shell's skirt: round the sides and back below the band, deepest over each ear (the ear flaps),
+        # tucking in toward the jaw; one continuous shell, so a flap never reads as a strap hanging off the rim
+        def sstep(e0, e1, x): x = max(0.0, min(1.0, (x - e0) / (e1 - e0))); return x * x * (3 - 2 * x)
+        flap = [j for j in range(seg) if math.sin(j / seg * math.tau) > -0.45]
+        deep = {j: 0.12 + 0.3 * sstep(0.35, 0.9, abs(math.cos(j / seg * math.tau))) for j in flap}
         rows = []
-        for k, dz in enumerate(drop):
-            sh = 1.0 - 0.06 * k  # tucks in under the cheekbone
-            rows.append({j: verts[0][j] if k == 0 else bm.verts.new((c.x + math.cos(j / seg * math.tau) * (rx + pad) * sh,
-                                                                      c.y + math.sin(j / seg * math.tau) * (ry + pad) * sh, z0 - dz)) for j in flap})
-        for k in range(len(drop) - 1):
+        for k in range(4):
+            rows.append({j: verts[0][j] if k == 0 else bm.verts.new((c.x + math.cos(j / seg * math.tau) * (rx + pad) * (1 - 0.05 * k * deep[j] / 0.42),
+                                                                      c.y + math.sin(j / seg * math.tau) * (ry + pad) * (1 - 0.05 * k * deep[j] / 0.42), z0 - deep[j] * k / 3)) for j in flap})
+        for k in range(3):
             for j in flap:
                 j2 = (j + 1) % seg
                 if j2 in rows[k]: thin.append(bm.faces.new((rows[k + 1][j], rows[k + 1][j2], rows[k][j2], rows[k][j])))
@@ -344,7 +355,11 @@ def make_cap(rig, body, helmet=False):
 def make_mask(rig, body):
     c, rx, ry, top = head_frame(rig, body)
     bm = bmesh.new()
-    zf0, zf1 = c.z - 0.66, c.z + 0.02  # chin to brow (c.z is the cap band, at the forehead)
+    # brow to chin: c.z is the band, at the forehead; the chin is the lowest point of the face (the head's front half)
+    face = [body.matrix_world @ v.co for v in body.data.vertices if dominant(body, v) == 'head']
+    chin = min(v.z for v in face if v.y < c.y - 0.3 * ry)
+    zf0, zf1 = chin - 0.03, c.z + 0.02
+    print('MASK', body.name, 'brow-to-chin', round(zf1 - zf0, 3))
     yf = c.y - ry - 0.07  # the cage sits just off the face
     def bar(p0, p1, r=0.022):
         d = (Vector(p1) - Vector(p0)); n = 6
@@ -452,7 +467,7 @@ def make_decal(rig, body, name, front):
     for v in me.vertices: kd.insert(v.co, v.index)
     kd.balance()
     o = bone_pos(rig, 'spine_03')
-    w, h, up = (0.92, 0.26, 0.5) if front else (0.85, 0.85, 0.4)  # across the chest only (wider wraps onto the flanks)
+    w, h, up = (0.8, 0.24, 0.5) if front else (0.85, 0.85, 0.4)  # across the chest only (wider wraps onto the flanks)
     nx, nz = 28, 8 if front else 14  # dense enough to follow the chest, light enough for the phone pack
     dy = -1 if front else 1
     bm = bmesh.new(); grid = []; uv = []
@@ -461,7 +476,7 @@ def make_decal(rig, body, name, front):
         for i in range(nx + 1):
             x = -w / 2 + w * i / nx; z = o.z + up - h / 2 + h * j / nz
             hit = bvh.ray_cast(Vector((x, o.y + dy * 3, z)), Vector((0, -dy, 0)))
-            p = (hit[0] + hit[1] * 0.03) if hit[0] else Vector((x, o.y + dy * 0.5, z))
+            p = (hit[0] + hit[1] * 0.045) if hit[0] else Vector((x, o.y + dy * 0.5, z))
             row.append(bm.verts.new(p)); uv.append((i / nx if front else 1 - i / nx, j / nz))
         grid.append(row)
     for j in range(nz):

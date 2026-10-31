@@ -5,7 +5,9 @@
 // the software rasterizer (SwiftShader) instead of the GPU: the floor for machines without usable WebGL drivers.
 //
 //   node tools/perf-review.mjs [--tiers=high,medium,low] [--viewports=desktop,mobile] [--throttle=4] [--soft]
-//        [--scenes=duel,grounder] [--out=reviews/loop-0/perf.json]
+//        [--scenes=duel,grounder] [--repeat=3] [--out=reviews/loop-0/perf.json]
+//
+// --repeat=N measures each scene N times and keeps the medians (GPU timer queries are noisy run to run).
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -19,6 +21,8 @@ const args = process.argv.slice(2);
 const opt = (k, d) => { const a = args.find((x) => x.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 const TIERS = opt('tiers', 'high,medium,low').split(','), VPS = opt('viewports', 'desktop,mobile').split(',');
 const THROTTLE = +opt('throttle', '1'), OUT = opt('out', ''), SOFT = args.includes('--soft');
+const REPEAT = Math.max(1, +opt('repeat', '1'));
+const med = (xs) => { const s = xs.filter((x) => x != null).sort((a, b) => a - b); return s.length ? s[(s.length - 1) >> 1] : null; };
 const ONLY = opt('scenes', '') ? opt('scenes', '').split(',') : null;
 const VIEW = { desktop: [{ width: 1280, height: 800 }, 1], mobile: [{ width: 390, height: 844 }, 2] };
 
@@ -66,6 +70,8 @@ for (const tier of TIERS) for (const vp of VPS) {
     // warm up (shader compiles, uploads) on a first pass of the scene, then measure a fresh one
     await page.evaluate(`(${fn})(window.__game)`);
     await page.waitForTimeout(1200);
+    const runs = [];
+    for (let k = 0; k < REPEAT; k++) {
     await page.evaluate(`(${fn})(window.__game)`);
     await page.evaluate(() => window.__game.act('gfxProfile', true));
     const r = await page.evaluate(() => new Promise((res) => {
@@ -77,9 +83,12 @@ for (const tier of TIERS) for (const vp of VPS) {
     }));
     const gfx = await page.evaluate(() => window.__game.act('gfx'));
     const prof = await page.evaluate(() => window.__game.act('gfxProfile', false));
+    runs.push({ r, gfx, prof });
+    }
+    const r = { fps: med(runs.map((x) => x.r.fps)), p50: med(runs.map((x) => x.r.p50)), p95: med(runs.map((x) => x.r.p95)) }, gfx = runs[runs.length - 1].gfx, prof = { all: med(runs.map((x) => x.prof.all)) };
     const heap = await page.evaluate(() => (performance.memory ? performance.memory.usedJSHeapSize / 1048576 : 0));
     const row = { tier, viewport: vp, scene: name, throttle: THROTTLE, soft: SOFT, query: opt('query', ''), fps: +r.fps.toFixed(1), p50: +r.p50.toFixed(2), p95: +r.p95.toFixed(2), cpuMs: gfx.cpuMs, calls: gfx.calls, tris: gfx.tris,
-      gpuMs: prof.all, heapMB: +heap.toFixed(1), loadMs, quality: gfx.quality, actors: gfx.actors, renderer: gfx.renderer };
+      gpuMs: prof.all, runs: REPEAT, heapMB: +heap.toFixed(1), loadMs, quality: gfx.quality, actors: gfx.actors, renderer: gfx.renderer };
     rows.push(row);
     console.log(`${tier.padEnd(6)} ${vp.padEnd(7)} ${name.padEnd(8)} ${String(row.fps).padStart(6)} fps  p95 ${String(row.p95).padStart(6)} ms  cpu ${row.cpuMs} ms  gpu ${row.gpuMs ?? '?'} ms  ${row.calls} calls  ${(row.tris / 1000).toFixed(0)}k tris  ${row.actors} actors  heap ${row.heapMB} MB`);
     await page.evaluate(() => window.__game.pause());

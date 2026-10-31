@@ -108,7 +108,7 @@ export function dress(actor, kit, o = {}) {
   if (actor.dressKey === dk) return; // palette unchanged since last frame
   actor.dressKey = dk;
   setPal(m, RG.jersey, kit.jersey, kit.wool ? 0.9 : 0.68); setPal(m, RG.pants, kit.pants, kit.wool ? 0.9 : 0.7);
-  setPal(m, RG.sock, kit.sock); setPal(m, RG.cap, kit.cap, 0.8); setPal(m, RG.helmet, kit.cap, 0.38);
+  setPal(m, RG.sock, kit.sock); setPal(m, RG.cap, kit.cap, 0.8); setPal(m, RG.helmet, kit.cap, 0.62); // glossy, but a brim facing the sun no longer blows out white
   setPal(m, RG.under, o.umpire ? kit.jersey : kit.trim, 0.8); setPal(m, RG.trim, kit.trim);
   setPal(m, RG.skin, o.skin || '#C68B62', 0.6); setPal(m, RG.shoe, o.umpire ? '#111111' : '#16161A', 0.45); setPal(m, RG.belt, o.umpire ? '#111111' : '#1E1E22', 0.5);
   setPal(m, RG.glove, '#8A5528', 0.55); setPal(m, RG.white, '#F3F0E8', 0.45); setPal(m, RG.bat, '#D6B07A', 0.45); setPal(m, RG.dark, '#18181C', 0.5);
@@ -158,10 +158,13 @@ function makeForm(proto, clips, mat) {
   root.updateMatrixWorld(true);
   const feet = [];
   for (const n of ['foot_l', 'foot_r', 'ball_l', 'ball_r', 'footL', 'footR']) if (bones[n]) { const p = new T.Vector3(); bones[n].getWorldPosition(p); root.worldToLocal(p); feet.push([bones[n], p.y]); }
+  // and each foot's rest orientation in the root's space, for planting it flat (heel, ball and edges down)
+  const footQ = {}, rinv = new T.Matrix4().copy(root.matrixWorld).invert(), fm = new T.Matrix4(), sc = new T.Vector3(), ps = new T.Vector3();
+  for (const n of ['foot_l', 'foot_r']) if (bones[n]) { const q = new T.Quaternion(); fm.multiplyMatrices(rinv, bones[n].matrixWorld).decompose(ps, q, sc); footQ[n] = q; }
   const mixer = new T.AnimationMixer(root);
   const acts = {};
   for (const [n, c] of Object.entries(clips)) { const a = mixer.clipAction(c); a.play(); a.enabled = false; a.setEffectiveWeight(0); acts[n] = a; }
-  return { root, lods, bones, mixer, acts, feet, skinDecals, lod: 0 }; // lods[k] is LODk; a tier's pack may leave out the finest
+  return { root, lods, bones, mixer, acts, feet, footQ, skinDecals, lod: 0 }; // lods[k] is LODk; a tier's pack may leave out the finest
 }
 export function makeActor(scene, i = 0) {
   const wrap = new T.Group();
@@ -225,6 +228,7 @@ export function pose(actor, name, t, name2 = null, t2 = 0, w2 = 0) {
   // bat hands grip; the gloved hand stays open, each finger inside its stall (the glove is shaped on the open hand)
   if (actor.v3) curlFingers(actor, actor.show.has('bat') ? 1 : actor.show.has('glove') ? 0 : loose, actor.show.has('bat') ? 1 : loose);
   ground(actor, !FLIGHT.has(name));
+  if (actor.v3) { const w = (PLANTED.has(name) ? 1 - (name2 ? w2 : 0) : 0) + (name2 && PLANTED.has(name2) ? w2 : 0); if (w > 0) plantFeet(actor, w); }
   for (const n of ACC) { const b = actor.bones[bn(n)]; if (b) { const s = actor.show.has(n) ? 1 : 0.0001; b.scale.set(s, s, s); } }
   // hair stays under a cap or helmet (v3 hair is real geometry and would poke through)
   if (actor.v3) { const v = actor.mat.userData.vis; if (v[RG.skin]) v[RG.hair] = actor.show.has('helmet') || actor.show.has('cap') ? 0 : 1; } // hair would poke through; the cap covers the nape
@@ -260,6 +264,59 @@ function ground(actor, on) {
   for (const [b, h] of f.feet) { p.setFromMatrixPosition(b.matrixWorld).applyMatrix4(inv); low = Math.min(low, p.y - h); }
   r.position.y = -low;
 }
+// Foot planting (v3, standing clips): grounding rests the lowest sole on the ground, but the mocap leaves the other
+// foot, or a toe, an inch or so up. A foot within PLANT ft of the ground comes down flat onto it: two-bone leg IK
+// bends the knee to lower the ankle, then the foot pitches so heel and ball both rest on the ground. Worked in the
+// body's own space (no mirror there), so left-handed rigs plant too; w blends it in and out with the clip.
+const PLANTED = new Set(['idle', 'ready', 'bat_stance', 'bat_bunt', 'ump']), PLANT = 0.3; // not the catcher's crouch: on the balls of the feet
+const pk = { inv: null, m: null, q: null, qb: null, v: [] };
+function rootSpace(b, pos, q) { // a bone's position and rotation in the form root's space
+  pk.m.multiplyMatrices(pk.inv, b.matrixWorld);
+  if (pos) pos.setFromMatrixPosition(pk.m);
+  if (q) pk.m.decompose(pk.v[5], q, pk.v[6]);
+}
+function turnBone(b, dq) { // rotate a bone by dq, given in root space
+  rootSpace(b.parent, null, pk.q); rootSpace(b, null, pk.qb);
+  b.quaternion.copy(pk.q.invert().multiply(dq).multiply(pk.qb));
+  b.updateMatrixWorld(true);
+}
+function plantFeet(actor, w) {
+  const f = actor.form, B = f.bones;
+  if (!pk.inv) { pk.inv = new T.Matrix4(); pk.m = new T.Matrix4(); pk.q = new T.Quaternion(); pk.qb = new T.Quaternion(); pk.dq = new T.Quaternion(); for (let i = 0; i < 8; i++) pk.v.push(new T.Vector3()); }
+  const restH = (f.restH = f.restH || Object.fromEntries(f.feet.map(([b, h]) => [b.name, h])));
+  actor.wrap.updateMatrixWorld(true);
+  pk.inv.copy(f.root.matrixWorld).invert();
+  const [H, K, A, P, Tg] = pk.v, gY = pk.v[7].setFromMatrixPosition(actor.wrap.matrixWorld).applyMatrix4(pk.inv).y;
+  for (const s of ['l', 'r']) {
+    const th = B[`thigh_${s}`], ca = B[`calf_${s}`], ft = B[`foot_${s}`], ba = B[`ball_${s}`];
+    if (!th || !ca || !ft || !ba) continue;
+    const hA = restH[ft.name], hB = restH[ba.name];
+    rootSpace(th, H); rootSpace(ca, K); rootSpace(ft, A); rootSpace(ba, P);
+    const lift = Math.min(A.y - hA, P.y - hB) - gY;
+    if (lift > PLANT || lift < -PLANT) continue; // a raised foot (stride, kick) stays up
+    // the knee: bend so the hip-to-ankle distance reaches the planted ankle
+    Tg.copy(A); Tg.y += (gY + hA - A.y) * w;
+    const a = H.distanceTo(K), b = K.distanceTo(A), d = Math.max(Math.abs(a - b) + 1e-3, Math.min(a + b - 1e-3, H.distanceTo(Tg)));
+    const u = H.clone().sub(K), v = A.clone().sub(K), n = new T.Vector3().crossVectors(u, v);
+    if (n.lengthSq() > 1e-8) {
+      n.normalize();
+      const want = Math.acos(Math.max(-1, Math.min(1, (a * a + b * b - d * d) / (2 * a * b))));
+      turnBone(ca, pk.dq.setFromAxisAngle(n, want - u.angleTo(v)));
+    }
+    // the hip: swing the leg so the ankle lands on the target
+    rootSpace(ft, A);
+    turnBone(th, pk.dq.setFromUnitVectors(u.copy(A).sub(H).normalize(), v.copy(Tg).sub(H).normalize()));
+    // the foot: back to its rest orientation (sole flat: heel, ball and both edges down), keeping the clip's heading
+    const q0 = f.footQ[ft.name]; if (!q0) continue;
+    rootSpace(ft, A, pk.qb);
+    const now = u.set(0, 1, 0).applyQuaternion(pk.qb), was = v.set(0, 1, 0).applyQuaternion(q0); // heading: along the foot bone, now vs at rest
+    const yaw = Math.atan2(now.x, now.z) - Math.atan2(was.x, was.z);
+    const want = pk.q.setFromAxisAngle(H.set(0, 1, 0), yaw).multiply(q0);
+    want.copy(pk.qb.clone().slerp(want, w));
+    turnBone(ft, pk.dq.copy(want).multiply(pk.qb.invert()));
+    ba.quaternion.slerp(rest(actor, ba), w); // toes flat too (the mocap curls them into the dirt)
+  }
+}
 const isLoop = (n) => LOOPS.has(n);
 export const clipDur = (n) => (A.clips[n] ? A.clips[n].duration : 1);
 
@@ -290,7 +347,7 @@ function attachDecals(actor) {
   const f = actor.form, chest = actor.bones.chest;
   if (!chest) return;
   if (!f.decals && f.skinDecals.word && f.skinDecals.num) { // wrapped on the jersey, bending with it
-    const mk = () => new T.MeshStandardMaterial({ transparent: true, roughness: 0.75, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, side: T.DoubleSide });
+    const mk = () => new T.MeshStandardMaterial({ transparent: true, roughness: 0.75, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8, side: T.DoubleSide }); // over the placket piping
     f.skinDecals.num.material = mk(); f.skinDecals.word.material = mk();
     f.decals = { num: f.skinDecals.num, word: f.skinDecals.word, skinned: true };
   }

@@ -325,6 +325,62 @@
         "effortWeights": "S=1, M=2, L=4"
       },
       "date": "2026-10-31"
+    },
+    {
+      "loop": 6,
+      "scores": {
+        "characters": 5.5,
+        "charfit": 5.5,
+        "animation": 5,
+        "environment": 5.5,
+        "lighting": 6,
+        "ui": 6.5,
+        "readability": 6,
+        "mobile": 6
+      },
+      "total": 46,
+      "stalls": 0,
+      "verdict": "continue",
+      "critics": {
+        "critic-claude": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 6,
+          "lighting": 6,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6
+        },
+        "critic-codex": {
+          "characters": 5,
+          "charfit": 5,
+          "animation": 5,
+          "environment": 5,
+          "lighting": 5.5,
+          "ui": 6.5,
+          "readability": 5.5,
+          "mobile": 6
+        },
+        "advocate": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 5.5,
+          "lighting": 6,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6
+        }
+      },
+      "calibration": {
+        "characters": 7.5,
+        "lighting": 7.5,
+        "perfGate": "fail: est. phone GPU = medium-mobile night 1.33 ms x 25 = 33.3 ms > 26 (grounder 25.3, gap 24.2; identical-geometry high-mobile rows 1.026/1.973/1.282 ms do not rescue it; trend 14.4 -> 24.5 -> 25-33 ms). High desktop min 328.7 fps / p95 6.0 ms pass; medium phone proxy min 47.5 fps pass (p95 47 ms, watch); software GL 4-run median 18.7/15.9 vs 19.9/15.1 baseline, within noise (perf.json single run 18.4/13.6 was the outlier); heap 90.5/88.3/68.0 MB pass; download not in perf.json (captured medium pack 4.04 MB over, post-capture 3.63 MB per brief, unverified)",
+        "factRulings": "R02 front helmet face black (A right) but nose/lips read in R10, R16 (advocate right), eyes banded by brims everywhere; ear flap strap from front, shell from behind; three builds shown (B wrong); upper arms inflated, not narrow (B wrong); R04 flash synced (B wrong) but no stride and 4-5 pose swap (A overstated load/stride); R07 camera cut 4-5 (advocate right), ball never in glove (real, 4th loop); R03 window ends at lift, release in R06 (advocate right); R05 stance feet hover (real); ump cage over chest in crouch and neck skin (real); catcher chest protector present but unconstructed (A overstated); landscape R02 buttons clear (A wrong); R05 pitcher not over plate (A wrong); R08 scoreboard is in-world (A wrong); low-tier cartoon head is the v2 player by design",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
     }
   ]
 }
