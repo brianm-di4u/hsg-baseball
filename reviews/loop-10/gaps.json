@@ -1,0 +1,195 @@
+[
+  {
+    "id": "G-pitch-release-sync",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "high/desktop/R06",
+      "strips/high/R03"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Parent the ball to the throwing-hand bone until a release key after front-foot strike with the hand forward of the head; spawn the pitch flight from the hand's world position on that frame. Test: hand-to-ball distance < 0.3 ft on every pre-release frame; no free ball in R03 frame 7 or R06. Extend the R03 strip through release and follow-through.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-kit-seams-decals",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R02-batter_hands",
+      "crops/high/R17-pitcher_hands",
+      "high/desktop/R05"
+    ],
+    "fix": "Replace per-triangle colour regions at collar, sleeve and sock top with texture-masked smooth boundaries; draw the wordmark above the placket piping; fix the state-dependent mirrored 27. Test: no sawtooth in R02-batter_head/R09-LF, all letters of SPRINGS and HAMILTON visible, 27 correct in high/desktop/R05.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-landscape-framing",
+    "category": "mobile",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS7",
+    "evidence": [
+      "high/landscape/R02",
+      "high/landscape/R05",
+      "high/mobile/R07",
+      "high/landscape/R10"
+    ],
+    "fix": "Landscape batting camera keeps the feet and plate in frame; pitch buttons never overlap the pitcher in landscape R05; portrait fielding camera keeps both corner bases in frame; HOME RUN banner clear of the in-world scoreboard in landscape R10.",
+    "priority": 0.75,
+    "selected": true
+  },
+  {
+    "id": "G-cloth-folds-normal",
+    "category": "characters",
+    "expectedGain": 0.75,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R08-CF",
+      "crops/high/R17-pitcher_hands"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Bake fold/crease/weave normal and AO maps for jersey and pants (sleeve hems, elbow, knee, crotch, belt-line bunching) with fabric roughness variation; fold shading must be visible in R08-CF and R17-pitcher_hands.",
+    "priority": 0.703,
+    "selected": true
+  },
+  {
+    "id": "G-face-hair-brows",
+    "category": "charfit",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R09-LF",
+      "crops/high/R02-batter_head",
+      "crops/high/R10-batter-trot"
+    ],
+    "benchmark": "art-src/samples/reference-renders/mpfb2_athlete_face_34.png",
+    "fix": "Add eyebrows and short hair cards/sideburns below cap and helmet at LOD0/LOD1; skin albedo/roughness map with lip and brow tone, pale skin no brighter than the reference; characters-only hemisphere fill so irises stay visible under brims. Compare to mpfb2_athlete_face_34.",
+    "priority": 0.469,
+    "selected": true
+  },
+  {
+    "id": "G-gear-construction",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R05-batter_feet",
+      "crops/high/R06-catcher_glove",
+      "crops/high/R05-ump_head"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Cleats with sole plate, laces and tongue; laced glove with web and pocket plus a round catcher's mitt; segmented padded chest protector and shin guards with knee caps; umpire mask fitted to the face with bars ending at the chin.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-set-pose-clip",
+    "category": "characters",
+    "expectedGain": 0.25,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands"
+    ],
+    "fix": "In set and stance poses keep the forearms in front of the belt strip with the throwing hand closed on the ball inside the glove; no belt band over the wrists in R17-pitcher_hands.",
+    "priority": 0.469,
+    "selected": true
+  },
+  {
+    "id": "G-far-lod-switch",
+    "category": "charfit",
+    "expectedGain": 0.25,
+    "severity": 2,
+    "effort": "S",
+    "workstream": "WS6",
+    "evidence": [
+      "high/desktop/R07",
+      "high/desktop/R09"
+    ],
+    "fix": "On high desktop lower the LOD1->LOD2 switch from ~70 px to 40 px player height (LOD2 40.9% vs LOD1 21.8% pixel error at 60 px in fidelity.json); high grounder must stay <= 1.6M tris and p95 <= 22 ms; medium unchanged.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-run-field-transitions",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R07",
+      "strips/high/R10",
+      "crops/high/R09-LF"
+    ],
+    "fix": "Blend >= 0.2 s from run into fielding crouch (no snap at R07 frames 4-5); trot arm swing +/-35 deg with closed fists and torso counter-rotation; fielders' heads look at the ball (R09-LF).",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-cap-shoulders",
+    "category": "charfit",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R08-CF",
+      "high/desktop/R05"
+    ],
+    "fix": "Six-panel cap with lower crown, button and curved bill separate from the helmet shell; reduce the kit's shoulder inflation toward the reference deltoid.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-crowd-and-stands",
+    "category": "environment",
+    "expectedGain": 1,
+    "severity": 4,
+    "effort": "L",
+    "workstream": "WS4",
+    "evidence": [
+      "high/desktop/R05",
+      "high/desktop/R01",
+      "high/desktop/R15",
+      "high/desktop/R13"
+    ],
+    "benchmark": "smb4-3",
+    "fix": "Instanced depth-varied fans replacing the photo card (sharper atlas at the plate and on phones); texture the grey stand boxes; remove the R15 haze seam and grey ovals; light or fog the night backdrop.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-field-camera-framing",
+    "category": "readability",
+    "expectedGain": 0.25,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS5",
+    "evidence": [
+      "high/desktop/R16",
+      "high/desktop/R09"
+    ],
+    "fix": "Lead-off camera keeps the runner on first and the 1B >= 5% inside the frame edge; add a ground ring or halo for a fly ball under 6 px on screen.",
+    "priority": 0.375,
+    "selected": false
+  }
+]

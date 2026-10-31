@@ -545,6 +545,60 @@
         "effortWeights": "S=1, M=2, L=4"
       },
       "date": "2026-10-31"
+    },
+    {
+      "loop": 10,
+      "scores": {
+        "characters": 5.5,
+        "charfit": 5.5,
+        "animation": 5.5,
+        "environment": 5.5,
+        "lighting": 6,
+        "ui": 6.5,
+        "readability": 6,
+        "mobile": 6
+      },
+      "total": 46.5,
+      "stalls": 3,
+      "verdict": "stop-stagnant",
+      "critics": {
+        "critic-claude": {
+          "characters": 5.5,
+          "charfit": 6,
+          "animation": 6,
+          "environment": 5.5,
+          "lighting": 6,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6
+        },
+        "critic-codex": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 5,
+          "lighting": 5.5,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6.5
+        },
+        "advocate": {
+          "characters": 5.5,
+          "charfit": 6,
+          "animation": 5.5,
+          "environment": 5.5,
+          "lighting": 6,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6.5
+        }
+      },
+      "calibration": {
+        "perfGate": "pass (provisional, not verified): high desktop min 323.2 fps / p95 4.4 ms; medium phone proxy (4x CPU) min 52.0 fps, grounder p95 33.8 ms (watch); est. phone GPU from perf.json = medium-mobile grounder 1.082 ms x 25 = 27.05 ms, 4% over 26, in a run ~20% slower than loop 9 on desktop with no build cause; same-build repeat (perf-gpu-repeat.json, identical calls/tris) 30-80% slower everywhere, given zero weight as a measurement and full weight as proof of noise; duel-normalised estimate 21.6-24.0 ms <= 26; software GL 20.9/16.9 vs 19.9/15.1 baseline, better; heap 107.1/100.6/71.7 MB pass; tris high 1.196M <= 1.6M, medium 531k <= 650k; download not in perf.json. Loop 11 must re-measure on a verified quiet machine; grounder >= 1.04 ms then makes WS6 the top gap.",
+        "factRulings": "R03 strip ends before foot strike and release (A wrong, B and advocate right; CHANGES claim not borne out); ball out of the hand in R03 frame 7 and in flight with arm laid back in R06 (judge-observed release desync); R04-batter ball at shoe is an approaching pitch seen from the side, desync not proven (A overstated); landscape R02 buttons clear, feet cropped by viewport (A wrong); R07 ring turns white at possession (advocate right); R10-batter-trot face readable, eyes lost only in head-down R02-batter_head (A overgeneralised); piping covers the I of SPRINGS (advocate right); 27 mirrored in R05 but correct on the same pitcher in R06 (state-dependent; advocate right on scope); R05-batter_feet contact darkening wraps both soles, left toe slightly lifted (B overstated); R09-LF ball still in flight (advocate right) but LF head turned away; LOD2 is used on high below ~70 px (advocate wrong, B partly right); low R06 lettering over chest protector (B right, low only); belt over forearms in R17 real",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
     }
   ]
 }

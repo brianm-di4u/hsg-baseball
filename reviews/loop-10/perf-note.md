@@ -1,0 +1,7 @@
+# Loop 10 perf: measurement conditions (facts)
+
+- `perf.json` is the pipeline run. Its quiet-GPU guard (polling for other projects' GPU jobs) was tripped and the run retried four times before a run with no detected job. Even so, desktop/high fps came in about 20% below loop 9 (duel 380 vs 480), which points at load on the machine the guard did not detect.
+- Its medium·mobile GPU medians (5 runs each): duel 0.893, grounder 1.082, gap 0.806, replay 0.759, night 0.830 ms. Grounder × 25 = 27.1 ms against the 26 ms budget.
+- `perf-gpu-repeat.json` is a second run of the same build (a git worktree of commit 4d77001, the captured build), again with no detected GPU job. Every scene, desktop and phone, high and medium, was 40–80% slower than in loops 7–9 (desktop/high duel 262 fps vs 480; medium·mobile duel 1.33 ms vs 0.72), so this machine was heavily loaded by something the guard does not see. It is recorded for completeness, not as a measurement of the build.
+- The duel scene does not change between loops 9 and 10 apart from the jersey buttons (one small strip per player). Scaled by each run's duel time, the pipeline run's grounder is 1.21 × the duel; on loop 9's duel time (0.715 ms) that is 0.87 ms, an estimated 21.6 ms.
+- Loop 10's changes that touch rendering: a narrow button strip per jersey (2 × 16 quads, one draw call per player on high/medium) and contact-shadow quads about 1.5× larger (same instanced draw).

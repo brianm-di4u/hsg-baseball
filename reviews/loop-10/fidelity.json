@@ -1,0 +1,88 @@
+{
+ "method": "Silhouette IoU of LOD0 (bind pose, no accessories) against the reference turnaround masks; then each LOD at the game's on-screen heights against LOD0 rendered 4\u00d7 and box-filtered (pixel error = share of the player's pixels off by > 12/255; LOD0's own row is the aliasing floor). Workbench, region palette, three-quarter view.",
+ "reference": "mpfb2_athlete",
+ "height_ft": 6.047657039016485,
+ "shape": {
+  "front": 0.8775440339383525,
+  "side": 0.8953065389051548
+ },
+ "rows": [
+  {
+   "model": "LOD0 vs reference (front)",
+   "distance": "turnaround",
+   "px": 1024,
+   "iou": 0.8775440339383525,
+   "err": 12.245596606164751
+  },
+  {
+   "model": "LOD0 vs reference (side)",
+   "distance": "turnaround",
+   "px": 1024,
+   "iou": 0.8953065389051548,
+   "err": 10.469346109484517
+  },
+  {
+   "model": "LOD0",
+   "distance": "360 px tall",
+   "px": 360,
+   "iou": 0.9976256607830839,
+   "err": 3.713824926081892
+  },
+  {
+   "model": "LOD1",
+   "distance": "360 px tall",
+   "px": 360,
+   "iou": 0.994366449074488,
+   "err": 6.60377358490566
+  },
+  {
+   "model": "LOD2",
+   "distance": "360 px tall",
+   "px": 360,
+   "iou": 0.9347608478043261,
+   "err": 33.63798581189886
+  },
+  {
+   "model": "LOD0",
+   "distance": "140 px tall",
+   "px": 140,
+   "iou": 0.9935313143193178,
+   "err": 9.11496618641576
+  },
+  {
+   "model": "LOD1",
+   "distance": "140 px tall",
+   "px": 140,
+   "iou": 0.988862837045721,
+   "err": 11.1957796014068
+  },
+  {
+   "model": "LOD2",
+   "distance": "140 px tall",
+   "px": 140,
+   "iou": 0.9368904188181296,
+   "err": 35.77165806081469
+  },
+  {
+   "model": "LOD0",
+   "distance": "60 px tall",
+   "px": 60,
+   "iou": 0.9775280898876404,
+   "err": 20.545746388443018
+  },
+  {
+   "model": "LOD1",
+   "distance": "60 px tall",
+   "px": 60,
+   "iou": 0.9743589743589743,
+   "err": 21.794871794871796
+  },
+  {
+   "model": "LOD2",
+   "distance": "60 px tall",
+   "px": 60,
+   "iou": 0.9203125,
+   "err": 40.9375
+  }
+ ]
+}
