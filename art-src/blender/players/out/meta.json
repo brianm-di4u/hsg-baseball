@@ -67,7 +67,7 @@
    "tris": [
     28000,
     9000,
-    2599
+    2600
    ],
    "clips": [],
    "height": 6.467286109924316,
@@ -83,14 +83,14 @@
     "upBack": 0.4,
     "back": 0.23762315183877944
    },
-   "bytes_high": 1839304,
-   "bytes_medium": 717332
+   "bytes_high": 1847816,
+   "bytes_medium": 725664
   },
   "average": {
    "tris": [
     27999,
     8999,
-    2600
+    2599
    ],
    "clips": [
     "ump",
@@ -120,14 +120,14 @@
     "upBack": 0.4,
     "back": 0.23962741762399672
    },
-   "bytes_high": 2424448,
-   "bytes_medium": 1300700
+   "bytes_high": 2432848,
+   "bytes_medium": 1308984
   },
   "stocky": {
    "tris": [
-    27998,
+    27999,
     9000,
-    2600
+    2598
    ],
    "clips": [],
    "height": 5.785055637359619,
@@ -143,8 +143,8 @@
     "upBack": 0.4,
     "back": 0.28356714218854906
    },
-   "bytes_high": 1840004,
-   "bytes_medium": 717260
+   "bytes_high": 1848504,
+   "bytes_medium": 725572
   }
  },
  "lods": [

@@ -1,0 +1,194 @@
+[
+  {
+    "id": "G-mobile-framing",
+    "category": "mobile",
+    "expectedGain": 0.75,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS5",
+    "evidence": [
+      "high/mobile/R07",
+      "high/mobile/R05",
+      "high/mobile/R12"
+    ],
+    "fix": "Portrait presets: tilt down and widen the broadcast fielding camera so both corner bags and the receiving fielder are framed; pull the pitching camera back; lower the night batting horizon. Test: 1B and 3B in frame and no empty band over 10% of height in high/mobile/R07; pitcher whole in high/mobile/R05. Gain mobile +0.5, readability +0.25.",
+    "priority": 1.125,
+    "selected": true
+  },
+  {
+    "id": "G-foot-plant-ik",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R05-batter_feet"
+    ],
+    "fix": "Ground-clamp or foot-IK the stance and idle clips (sole y = 0 outside the stride window). Test: both soles on the dirt with the contact shadow directly beneath in crops/high/R05-batter_feet. Gain animation +0.25, lighting +0.25.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-swing-finish",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R04"
+    ],
+    "benchmark": "smb4-3",
+    "fix": "Key the follow-through: hands above the lead shoulder, bat wrapped behind the neck, back heel up, belt buckle to the pitcher. Test: strips/high/R04 frame 8 bat head above the helmet and behind the batter.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-uniform-cloth",
+    "category": "characters",
+    "expectedGain": 0.75,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R16-1B"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Bake cloth normal/AO with button placket, elbow/waist/knee folds, belt loops and buckle; move trim, sock and piping colour edges into texture space and stop piping at the wordmark. Test: no stair-stepped collar or sock edges in R02-batter_head and R16-1B; placket and knee folds visible; every letter of HAMILTON readable in R17-pitcher_hands. Gain characters +0.5, charfit +0.25.",
+    "priority": 0.703,
+    "selected": true
+  },
+  {
+    "id": "G-glove-mitt-cleats",
+    "category": "characters",
+    "expectedGain": 0.75,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R06-catcher_glove",
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R05-batter_feet"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Model a laced-web fielder's glove with pocket and rolled heel, a rounded fingerless catcher's mitt, and a low-top cleat with laces, tongue and spike plate; leather normal maps. Test: no fingers on the mitt in R06-catcher_glove, web lacing in R17-pitcher_hands, laces in R05-batter_feet. Gain characters +0.5, charfit +0.25.",
+    "priority": 0.703,
+    "selected": true
+  },
+  {
+    "id": "G-face-brim-eyes",
+    "category": "charfit",
+    "expectedGain": 0.75,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS3",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R16-1B"
+    ],
+    "benchmark": "mpfb2_athlete_face_34",
+    "fix": "MPFB2 eye, iris and brow albedo at LOD0/1 plus an eye-socket hemisphere fill under helmet brims (cap-shaded faces already read). Test: eyes and brows distinguishable in R02-batter_head and R16-1B. Gain charfit +0.25, characters +0.25, lighting +0.25.",
+    "priority": 0.703,
+    "selected": false
+  },
+  {
+    "id": "G-run-arm-pump",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R07",
+      "strips/high/R10",
+      "crops/high/R07-batter-runner"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Counter-phased arm swing in run, chase and trot; glove carried closed, bare hand a loose fist. Test: hands alternate fore and aft across strips/high/R07 frames 1-4 and strips/high/R10 frames 1-8; batter-runner arms leave the chest.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-masks-catcher-gear",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R05-ump_head",
+      "crops/high/R06-catcher_glove",
+      "crops/high/R14-batter"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "Closed mask frame with side pads both sides, chin and top padding and straps parented to the head bone, bars inside the head silhouette; plate-segmented shin guards with fitted knee caps; chest protector with harness and clean collar seam. Test: bars end in a frame on both sides in R05-ump_head; knee caps hug the knee in R06-catcher_glove.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-body-variety",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "high/desktop/R05",
+      "crops/high/R16-1B"
+    ],
+    "benchmark": "smb4-4",
+    "fix": "Three or more MakeHuman shape presets (lean, stocky, tall) per roster slot; reduce the deltoid bulge toward mpfb2_athlete_front. Test: visibly different torso widths among players in high/desktop/R05 and strips/high/R07. Gain characters +0.25, charfit +0.25.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-board-slice",
+    "category": "environment",
+    "expectedGain": 0.25,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS4",
+    "evidence": [
+      "crops/high/R07-batter-runner",
+      "crops/high/R05-ump_head"
+    ],
+    "fix": "Lay boards along the whole stand-front and backstop path as one sequence: no board narrower than full width, no overlapping ends at surface junctions. Test: no navy E sliver or RIDGELINE-over-REDBIRD overlap in R07-batter-runner, no cut RED board in R05-ump_head.",
+    "priority": 0.375,
+    "selected": true
+  },
+  {
+    "id": "G-reticle-occludes-catcher",
+    "category": "ui",
+    "expectedGain": 0.25,
+    "severity": 2,
+    "effort": "S",
+    "workstream": "WS7",
+    "evidence": [
+      "high/desktop/R05",
+      "high/desktop/R14"
+    ],
+    "fix": "Draw the zone and reticle outline-only at 50% fill opacity, or move the zone above the catcher's mask. Test: catcher's mask and chest visible through the reticle in R05 and R14.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-crowd-backdrop",
+    "category": "environment",
+    "expectedGain": 0.75,
+    "severity": 4,
+    "effort": "L",
+    "workstream": "WS4",
+    "evidence": [
+      "high/desktop/R05",
+      "high/landscape/R10",
+      "crops/high/R16-1B"
+    ],
+    "benchmark": "smb4-3",
+    "fix": "Instanced impostor fans per seat row with tint and idle bob; rail and fascia over the grey band; fade the photo backdrop into the tree layer with depth fog. Test: individual heads against seats in high/desktop/R05; no horizontal seam behind the trees in high/landscape/R10.",
+    "priority": 0.281,
+    "selected": false
+  }
+]

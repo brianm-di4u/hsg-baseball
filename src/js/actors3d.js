@@ -145,7 +145,7 @@ function makeForm(proto, clips, mat) {
     if (!o.isSkinnedMesh) return;
     if (o.name.startsWith('DECAL_')) { // v3: lettering and number skinned onto the jersey (attachDecals gives them a material)
       o.geometry.boundingSphere = new T.Sphere(new T.Vector3(0, 3.2, 0), 5.2); o.frustumCulled = true; o.visible = false;
-      skinDecals[o.name === 'DECAL_FRONT' ? 'word' : 'num'] = o; return;
+      skinDecals[{ DECAL_FRONT: 'word', DECAL_BACK: 'num', DECAL_PLACKET: 'btn' }[o.name] || 'num'] = o; return;
     }
     o.material = mat; o.castShadow = true; o.receiveShadow = true; o.customDepthMaterial = shadowDepth();
     // a fixed bound around the player in any pose (feet): a skinned mesh can't be culled by its rest-pose box
@@ -239,6 +239,8 @@ export function pose(actor, name, t, name2 = null, t2 = 0, w2 = 0) {
   ground(actor, !FLIGHT.has(name));
   if (actor.v3) { const w = (PLANTED.has(name) ? 1 - (name2 ? w2 : 0) : 0) + (name2 && PLANTED.has(name2) ? w2 : 0); if (w > 0) plantFeet(actor, w); }
   for (const n of ACC) { const b = actor.bones[bn(n)]; if (b) { const s = actor.show.has(n) ? 1 : 0.0001; b.scale.set(s, s, s); } }
+  // the catcher's chest protector covers the jersey front: its lettering and buttons would draw through it
+  const sd = actor.form.skinDecals; if (sd && actor.form.decals && actor.form.decals.skinned) { const open = !actor.show.has('gear'); if (sd.word.material) sd.word.material.visible = open; if (sd.btn && sd.btn.material) sd.btn.material.visible = open; }
   // hair stays under a cap or helmet (v3 hair is real geometry and would poke through)
   if (actor.v3) { const v = actor.mat.userData.vis; if (v[RG.skin]) v[RG.hair] = actor.show.has('helmet') || actor.show.has('cap') ? 0 : 1; } // hair would poke through; the cap covers the nape
 }
@@ -373,6 +375,20 @@ function decalTex(key, w, h, draw) {
   }
   return decalCache.get(key);
 }
+// the placket's buttons: six small pale buttons down a narrow strip (the strip's UVs run up its length)
+let btnTex = null;
+function buttonsTex() {
+  if (btnTex) return btnTex;
+  const c = document.createElement('canvas'); c.width = 32; c.height = 512; const x = c.getContext('2d');
+  for (let i = 0; i < 6; i++) {
+    const y = 512 - (i + 0.5) * (512 / 6);
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.arc(16, y + 1.5, 9.5, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#F2EEE4'; x.beginPath(); x.arc(16, y, 8.5, 0, Math.PI * 2); x.fill();
+    x.fillStyle = 'rgba(0,0,0,0.3)'; for (const [dx, dy] of [[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]]) { x.beginPath(); x.arc(16 + dx, y + dy, 1.2, 0, Math.PI * 2); x.fill(); }
+  }
+  btnTex = new T.CanvasTexture(c); btnTex.flipY = false; btnTex.colorSpace = T.SRGBColorSpace; btnTex.anisotropy = 4;
+  return btnTex;
+}
 function attachDecals(actor) {
   const f = actor.form, chest = actor.bones.chest;
   if (!chest) return;
@@ -383,6 +399,7 @@ function attachDecals(actor) {
       m.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\nmvPosition.xyz += normalize(-mvPosition.xyz) * 0.12; gl_Position = projectionMatrix * mvPosition;'); };
       m.customProgramCacheKey = () => 'ds-decal-pull'; return m; };
     f.skinDecals.num.material = mk(); f.skinDecals.word.material = mk();
+    if (f.skinDecals.btn) { const b = f.skinDecals.btn; b.material = mk(); b.material.map = buttonsTex(); b.visible = true; }
     f.decals = { num: f.skinDecals.num, word: f.skinDecals.word, skinned: true };
   }
   if (!f.decals) {

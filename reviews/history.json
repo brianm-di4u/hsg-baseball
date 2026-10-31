@@ -489,6 +489,62 @@
         "effortWeights": "S=1, M=2, L=4"
       },
       "date": "2026-10-31"
+    },
+    {
+      "loop": 9,
+      "scores": {
+        "characters": 5.5,
+        "charfit": 5.5,
+        "animation": 5.5,
+        "environment": 5.5,
+        "lighting": 6,
+        "ui": 6.5,
+        "readability": 6,
+        "mobile": 6
+      },
+      "total": 46.5,
+      "stalls": 2,
+      "verdict": "continue",
+      "critics": {
+        "critic-claude": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 5.5,
+          "lighting": 5.5,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6
+        },
+        "critic-codex": {
+          "characters": 5,
+          "charfit": 5,
+          "animation": 5,
+          "environment": 5,
+          "lighting": 5.5,
+          "ui": 6.5,
+          "readability": 5.5,
+          "mobile": 5.5
+        },
+        "advocate": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 5.5,
+          "lighting": 5.5,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6
+        }
+      },
+      "calibration": {
+        "characters": 7.5,
+        "lighting": 7,
+        "perfGate": "pass: high desktop min 419.9 fps / p95 2.9 ms; medium phone proxy (4x CPU, single runs) min 63.3 fps, grounder p95 33.5 ms (watch); est. phone GPU = worst medium-mobile median gpuMs 0.900 (grounder) x 25 = 22.5 ms <= 26 (down from 24.8); software GL 21.1/17.1 fps vs 19.9/15.1 baseline, better; heap 93.1/96.2/76.5 MB pass (low at 85%, watch); scene tris high 1.196M <= 1.6M, medium 531k <= 650k; download not in perf.json",
+        "factRulings": "R02 helmet face: eyes lost, nose/lips modelled (A overstated); R16-1B eyes faint but present (A overstated); R13 ball visible by scoreboard (A wrong); landscape R10 ball visible below banner (A wrong); R05 reticle covers mask/chest, mitt visible (both partly right); ump mask has left side pad, right bars open-ended past the head (both partly right); R05 front stance shoe hovers, rear near planted (Codex overstated; 6th loop); R14 grip closed (Codex wrong); R07 arms change but no pump, 4-5 camera reframe (advocate right); R04 stride now visible, finish droops (A right); R14 park distinct (Codex wrong); board slice persists in R07-batter-runner and R05-ump_head (loop-9 fix did not land); piping through HAMILTON letters persists; low R05 face-band on back of pitcher head (A right); mobile R07 corner bags off-frame (both right)",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
     }
   ]
 }

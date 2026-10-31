@@ -499,7 +499,7 @@ def make_glove(rig, body):
     return o
 
 
-def make_decal(rig, body, name, front):
+def make_decal(rig, body, name, front, strip=None):
     """The jersey lettering (front) or number (back): a grid laid onto the dressed torso by rays, 0.012 ft proud of
     the cloth, skinned with the weights of the nearest body vertex, so it wraps the chest and bends with the pose.
     UVs run 0..1 left to right as seen from outside."""
@@ -512,6 +512,8 @@ def make_decal(rig, body, name, front):
     o = bone_pos(rig, 'spine_03')
     w, h, up = (0.8, 0.24, 0.5) if front else (0.85, 0.85, 0.4)  # across the chest only (wider wraps onto the flanks)
     nx, nz = 28, 8 if front else 14  # dense enough to follow the chest, light enough for the phone pack
+    if strip:  # the placket's button strip: (z bottom, z top), narrow, down the front's centre line
+        w, h, up = 0.07, strip[1] - strip[0], (strip[0] + strip[1]) / 2 - o.z; nx, nz = 2, 16
     dy = -1 if front else 1
     bm = bmesh.new(); grid = []; uv = []
     for j in range(nz + 1):
@@ -709,7 +711,11 @@ for vname in args.variants.split(','):
            shell(body, rig, 'shinguard_l', lambda c, n: n.y < -0.2 and c.x > 0.05 and bone_pos(rig, 'foot_l').z + 0.1 < c.z < bone_pos(rig, 'calf_l').z + 0.25, 0.08, 'shinguard_l', REG['gear']),
            shell(body, rig, 'shinguard_r', lambda c, n: n.y < -0.2 and c.x < -0.05 and bone_pos(rig, 'foot_r').z + 0.1 < c.z < bone_pos(rig, 'calf_r').z + 0.25, 0.08, 'shinguard_r', REG['gear']),
            make_glove(rig, body), make_bat(rig)]
-    decals = [make_decal(rig, body, 'DECAL_FRONT', True), make_decal(rig, body, 'DECAL_BACK', False)]
+    # the buttons run down the placket from just above the belt to just under the collar band (which dips at the front)
+    # (the neckline plane drops 0.35 ft per ft forward: about 0.16 ft at the chest's front, then the 0.08 ft band)
+    zc = bone_pos(rig, 'neck_01').z - 0.02 - 0.16 - 0.08 - 0.05
+    decals = [make_decal(rig, body, 'DECAL_FRONT', True), make_decal(rig, body, 'DECAL_BACK', False),
+              make_decal(rig, body, 'DECAL_PLACKET', True, (land['z_belt'] + 0.12, zc))]
     lod0 = join([body, *extras, *acc], 'LOD0')
     # tidy for export: one material slot, triangulated
     lod0.data.materials.clear()

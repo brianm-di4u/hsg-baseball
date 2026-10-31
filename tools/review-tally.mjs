@@ -17,7 +17,7 @@ const CATS = ['characters', 'charfit', 'animation', 'environment', 'lighting', '
 const GATE = { characters: 7.5, charfit: 7, animation: 7, environment: 7, lighting: 7, ui: 7, readability: 7, mobile: 7 };
 // the campaign's focus: character categories count 1.25× in backlog priority
 const FOCUS = { characters: 1.25, charfit: 1.25, animation: 1.25 };
-const COST = { S: 1, M: 2, L: 4 }, CAPACITY = 8, STALLS = 2, CAP = Infinity; // from loop 10: 2 stagnant loops, no cap (PROTOCOL.md)
+const COST = { S: 1, M: 2, L: 4 }, CAPACITY = 8, STALLS = 3, CAP = 12; // 3 stagnant loops in a row, or 12 loops (PROTOCOL.md; the football values were 2 and none)
 
 function block(file) {
   const t = fs.readFileSync(file, 'utf8');
