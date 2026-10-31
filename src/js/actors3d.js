@@ -59,7 +59,9 @@ export async function loadPlayers(pack) {
   }
   for (const [k, url] of Object.entries(pack.skin || {})) {
     const im = new Image(); im.src = url; await im.decode();
-    const t = new T.Texture(im); t.colorSpace = T.SRGBColorSpace; t.flipY = false; t.anisotropy = 4; t.needsUpdate = true;
+    const t = new T.Texture(im); t.flipY = false; t.anisotropy = 4; t.needsUpdate = true;
+    if (k === 'fabric') { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(28, 28); v3.fabric = t; continue; } // a normal map: linear, tiled
+    t.colorSpace = T.SRGBColorSpace;
     v3.skin[k] = t;
   }
   A.v3 = v3;
@@ -83,6 +85,8 @@ function paletteMaterial() {
 if (rid == ${RG.skin}) diffuseColor.rgb *= texture2D(map, vMapUv).rgb * 2.0; // the detail map is stored at half scale
 #endif`)
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = pc.a;')
+      // the fabric normal map (high tier) only on cloth: jersey, pants, socks, undershirt, trim
+      .replace('#include <normal_fragment_maps>', 'vec3 nBase = normal;\n#include <normal_fragment_maps>\nif (!(rid == 0 || rid == 1 || rid == 2 || rid == 8 || rid == 15)) normal = nBase;')
       // skin keeps a little of its own light: faces under a brim or a helmet still show eyes and brows
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\nif (rid == ${RG.skin}) totalEmissiveRadiance += diffuseColor.rgb * 0.09 + vec3(0.016, 0.012, 0.01);`);
   };
@@ -112,6 +116,8 @@ export function dress(actor, kit, o = {}) {
   if (actor.v3) { // light skin tones tint the light detail map, dark tones the dark one
     const t = A.v3.skin[lum(o.skin || '#C68B62') > 0.25 ? 'light' : 'dark'] || null;
     if (m.map !== t) { m.map = t; m.needsUpdate = true; }
+    const n = actor.fabric ? A.v3.fabric || null : null;
+    if (m.normalMap !== n) { m.normalMap = n; m.normalScale.set(0.6, 0.6); m.needsUpdate = true; }
   }
   actor.kit = kit;
 }
@@ -197,7 +203,7 @@ export function pose(actor, name, t, name2 = null, t2 = 0, w2 = 0) {
   if (name2) set(name2, t2, w2);
   actor.mixer.update(0);
   const loose = name === 'run' ? 0.7 : 0.25; // a runner's hands close to loose fists
-  if (actor.v3) curlFingers(actor, actor.show.has('bat') ? 1 : loose, actor.show.has('bat') ? 1 : actor.show.has('glove') ? 0.6 : loose);
+  if (actor.v3) curlFingers(actor, actor.show.has('bat') || actor.show.has('glove') ? 1 : loose, actor.show.has('bat') ? 1 : loose); // the gloved hand closes inside the mitt
   ground(actor, !FLIGHT.has(name));
   for (const n of ACC) { const b = actor.bones[bn(n)]; if (b) { const s = actor.show.has(n) ? 1 : 0.0001; b.scale.set(s, s, s); } }
   // hair stays under a cap or helmet (v3 hair is real geometry and would poke through)

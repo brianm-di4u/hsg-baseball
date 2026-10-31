@@ -143,7 +143,7 @@ export async function loadPlayerPack() {
 // The tier decides who gets v3 bodies and how fine they may get (lodMax).
 function applyPlayers() {
   const on = !!R3.v3 && R3.quality !== 'low';
-  for (const a of R3.actors) { useV3(a, on); a.lodMax = R3.quality === 'high' ? 0 : 1; }
+  for (const a of R3.actors) { useV3(a, on); a.lodMax = R3.quality === 'high' ? 0 : 1; a.fabric = R3.quality === 'high'; a.dressKey = null; }
 }
 // Contact shadows under the feet of every visible player (feet: ankle and toe bones of each side).
 const CF = [['foot_l', 'ball_l', 'footL'], ['foot_r', 'ball_r', 'footR']];
@@ -320,12 +320,16 @@ const CAMS = {
   bat: [[5.4, 11.5, 2.6, 47, 0, -60], [6.4, 12.5, -1.4, 62, 0, -60]],
   cf: [[15, -188, 2.9, 4.6, -5.5, 0], [14, -168, 2.6, 4.6, -3.2, 0]],
 };
-function duelCamera(kind) {
+// The duel camera's pose (a pure function of the kind and the aspect), so the field camera can ease out of it
+// without depending on which frames happened to render.
+function duelPose(kind) {
   const portrait = R3.H > R3.W;
-  const c = R3.cam;
   const o = (window.__cam && window.__cam[portrait ? 1 : 0]) || CAMS[kind][portrait ? 1 : 0];
-  c.fov = o[3]; c.position.set(o[4] || 0, o[0], o[1]); c.lookAt(0, o[2], o[5] ?? -60); c.updateProjectionMatrix();
-  R3.lastDuel = { p: c.position.clone(), l: new T.Vector3(0, o[2], o[5] ?? -60), fov: o[3] };
+  return { p: new T.Vector3(o[4] || 0, o[0], o[1]), l: new T.Vector3(0, o[2], o[5] ?? -60), fov: o[3] };
+}
+function duelCamera(kind) {
+  const c = R3.cam, d = duelPose(kind);
+  c.fov = d.fov; c.position.copy(d.p); c.lookAt(d.l); c.updateProjectionMatrix();
 }
 function fieldCamera(g, tl, t, park, ui) {
   if (ui && ui.replay) return replayCamera(tl, t);
@@ -354,7 +358,7 @@ function fieldCamera(g, tl, t, park, ui) {
   const px = tx - dirx * dist * 0.5, py = ty - diry * dist, pz = h;
   const c = R3.cam;
   // start from the duel camera and pull out
-  const d0 = R3.lastDuel || { p: new T.Vector3(0, 9.3, 16), l: new T.Vector3(0, 3.9, -44), fov: 40 };
+  const d0 = duelPose(ui && ui.userPitches ? 'cf' : 'bat');
   const p1 = g2t(px, py, pz), l1 = g2t(tx, ty, tz);
   c.position.lerpVectors(d0.p, p1, ease);
   const look = new T.Vector3().lerpVectors(d0.l, l1, ease);

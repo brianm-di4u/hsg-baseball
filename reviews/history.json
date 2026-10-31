@@ -161,6 +161,62 @@
         "effortWeights": "S=1, M=2, L=4"
       },
       "date": "2026-10-31"
+    },
+    {
+      "loop": 3,
+      "scores": {
+        "characters": 5,
+        "charfit": 5.5,
+        "animation": 5,
+        "environment": 5,
+        "lighting": 5.5,
+        "ui": 6,
+        "readability": 6,
+        "mobile": 6
+      },
+      "total": 44,
+      "stalls": 0,
+      "verdict": "continue",
+      "critics": {
+        "critic-claude": {
+          "characters": 5,
+          "charfit": 5.5,
+          "animation": 5,
+          "environment": 5,
+          "lighting": 5.5,
+          "ui": 6,
+          "readability": 5.5,
+          "mobile": 5.5
+        },
+        "critic-codex": {
+          "characters": 4.5,
+          "charfit": 5,
+          "animation": 5,
+          "environment": 5,
+          "lighting": 5.5,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6.5
+        },
+        "advocate": {
+          "characters": 5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 5,
+          "lighting": 6,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6
+        }
+      },
+      "calibration": {
+        "characters": 7.5,
+        "lighting": 7.5,
+        "perfGate": "pass: high desktop min 362.8 fps / p95 3.5 ms; medium phone proxy min 47.8 fps; est. phone GPU 0.863 ms x 25 = 21.6 ms (brief 3-run 19.5 ms) <= 26 ms; software GL 19.3/15.9 vs 19.9/15.1 baseline, within noise; heap 70.7/78/75.6 MB pass; download not in perf.json",
+        "factRulings": "backstop net exists (A wrong); trot elbows bent (A wrong) but lead hand open; R10 shows the ball (A wrong), trot unframed; R09 captured before catch (advocate right); R16 runner near second (A wrong); R07 glove misses ball at possession (real); R04 no load, bloom below ball (Codex right); R14 grip wraps handle (Codex wrong); R07 edge slabs are dugout roofs (A overstated); mobile R07 crops 1B/3B (Codex right); low-tier crop is regression only (advocate right); judge saw the .calibration key before scoring",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
     }
   ]
 }

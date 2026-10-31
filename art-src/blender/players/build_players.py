@@ -149,6 +149,9 @@ def dress_body(rig, body):
     for off in (0.0, -0.08):  # the neckline, and the lower edge of the collar band 0.08 ft below it
         cut(neck_zone, Vector((0, 0, z_collar)) + nn * off, nn)
     cut(lambda f: fbone(f).startswith('calf'), Vector((0, 0, z_pants)), Vector((0, 0, 1)))
+    # the placket: two piping lines down the jersey front, either side of the centre line
+    front = lambda f: torso(f) and f.normal.y < -0.2 and z_belt < f.calc_center_median().z < z_collar
+    for x in (-0.075, -0.045, 0.045, 0.075): cut(front, Vector((x, 0, 0)), Vector((1, 0, 0)))
     for side, sx in (('l', 1), ('r', -1)):
         sh, el = Vector((sh_l.x * sx, sh_l.y, sh_l.z)), Vector((el_l.x * sx, el_l.y, el_l.z))
         for t0 in (0.5, 0.43):  # the sleeve hem, and the top of the cuff band
@@ -166,7 +169,8 @@ def dress_body(rig, body):
         near = (Vector((c.x, c.y)) - Vector((nk.x, nk.y))).length < 0.6 and abs(c.z - z_collar) < 0.5
         if (near or b in NECKLINE) and not b.startswith(('upperarm', 'lowerarm', 'hand', 'head')):
             h = (c - Vector((0, 0, z_collar))).dot(Vector((0, -0.35, 1)).normalized())
-            regs.append(REG['skin'] if h > 0 else REG['trim'] if h > -0.08 else REG['jersey']); continue
+            if h > -0.08: regs.append(REG['skin'] if h > 0 else REG['trim']); continue  # skin above, the collar band
+            if b == 'neck_01': regs.append(REG['jersey']); continue  # below the band: cloth (other bones: the torso rules)
         if b.startswith(('hand', 'index', 'middle', 'ring', 'pinky', 'thumb')) or b in DEFORM_SKIN: regs.append(REG['skin']); continue
         if b.startswith('lowerarm'): regs.append(REG['under']); continue
         if b.startswith('upperarm'):
@@ -177,6 +181,7 @@ def dress_body(rig, body):
         if b.startswith('calf'): regs.append(REG['pants'] if c.z > z_pants else REG['sock']); continue
         # torso: jersey above the belt, the belt, pants below
         if abs(c.z - z_belt) < 0.09: regs.append(REG['belt'])
+        elif z_belt + 0.09 < c.z < z_collar - 0.08 and 0.045 < abs(c.x) < 0.075 and f.normal.y < -0.2: regs.append(REG['trim'])  # placket piping
         elif c.z > z_belt: regs.append(REG['jersey'])
         else: regs.append(REG['pants'])
     # Cloth: first relax the anatomy out of the garment areas (cloth bridges the hollows and hides the nipples,
@@ -207,6 +212,18 @@ def dress_body(rig, body):
 
 def region_all(o, reg):
     set_region(o.data, [reg] * len(o.data.polygons))
+
+
+def region_cleats(o):
+    """Athletic cleats from MakeHuman's shoe: a dark sole and a white stripe along each side on the black upper."""
+    me = o.data; zs = [v.co.z for v in me.vertices]; z0, z1 = min(zs), max(zs)
+    regs = []
+    for f in me.polygons:
+        c, n = f.center, f.normal
+        if n.z < -0.5 or c.z < z0 + 0.05 * (z1 - z0) / 0.5: regs.append(REG['dark'])  # the sole and its edge
+        elif abs(n.x) > 0.55 and z0 + 0.12 * (z1 - z0) < c.z < z0 + 0.32 * (z1 - z0): regs.append(REG['white'])  # side stripe
+        else: regs.append(REG['shoe'])
+    set_region(me, regs)
 
 
 def region_eyes(o):
@@ -269,8 +286,8 @@ def head_frame(rig, body, band=0.36):
 def make_cap(rig, body, helmet=False):
     c, rx, ry, top = head_frame(rig, body, 0.42 if helmet else 0.34)
     bm = bmesh.new()
-    pad = 0.07 if helmet else 0.05  # a cap's crown covers the hair
-    h = (top - c.z) + pad
+    pad = 0.08 if helmet else 0.065  # clear of the scalp everywhere
+    h = (top - c.z) + pad + 0.02
     rings, seg = 9, 36
     verts = []
     for i in range(rings + 1):
@@ -386,7 +403,7 @@ def make_glove(rig, body):
     for co in left: bm.verts.new(co)
     bmesh.ops.convex_hull(bm, input=bm.verts[:])
     c = sum((v.co for v in bm.verts), Vector()) / len(bm.verts)
-    for v in bm.verts: v.co = c + (v.co - c) * 1.12 + (v.co - c).normalized() * 0.05
+    for v in bm.verts: v.co = c + (v.co - c) * 1.18 + (v.co - c).normalized() * 0.07  # roomy: the closed hand sits inside
     bmesh.ops.triangulate(bm, faces=bm.faces[:])
     bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=1, use_grid_fill=True)
     for _ in range(3): bmesh.ops.smooth_vert(bm, verts=bm.verts, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
@@ -532,6 +549,11 @@ def skin_maps():
             sc = bpy.context.scene; sc.render.image_settings.file_format = 'WEBP'; sc.render.image_settings.quality = 82
             im2.save_render(os.path.join(OUT, f'skin-{key}-{size}.webp'), scene=sc)
         out[key] = mean
+    # cloth detail: Poly Haven's cotton_jersey normal map (CC0), at 512², tiled over the uniform by the game
+    nor = bpy.data.images.load(os.path.join(ROOT, 'art-src', 'samples', 'polyhaven-textures', 'cotton_jersey', 'cotton_jersey_nor_gl_1k.jpg'))
+    nor.scale(512, 512); nor.colorspace_settings.name = 'Non-Color'
+    sc = bpy.context.scene; sc.render.image_settings.file_format = 'WEBP'; sc.render.image_settings.quality = 85
+    nor.save_render(os.path.join(OUT, 'fabric-nor-512.webp'), scene=sc)
     return out
 
 
@@ -545,7 +567,7 @@ for vname in args.variants.split(','):
     BONES.clear(); BONES.update(b.name for b in rig.data.bones)
     for o in extras:
         n = o.name.lower()
-        if 'shoes' in n: region_all(o, REG['shoe'])
+        if 'shoes' in n: region_cleats(o)
         elif 'short02' in n or 'eyebrow' in n or 'hair' in n: region_all(o, REG['hair'])
         elif 'eye' in n: region_eyes(o)
         else: region_all(o, REG['skin'])

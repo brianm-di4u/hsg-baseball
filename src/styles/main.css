@@ -273,5 +273,5 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
 body:not([data-scene="game"]) .tip { display: none; }
 .sb-pitch abbr { text-decoration: none; }
 /* touch: key hints on the pad are noise; keep the meter prompt */
-@media (pointer: coarse) { .pb small:not(.keep) { display: none; } }
+@media (pointer: coarse) { .pb small:not(.keep) { display: none; } .tip { display: none; } } /* keyboard and mouse hints mean nothing on a touch screen */
 @media (min-width: 700px) { .sb-info { font-size: .86rem; } }

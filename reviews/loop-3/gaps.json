@@ -1,0 +1,202 @@
+[
+  {
+    "id": "G-regression-environment",
+    "category": "environment",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS6",
+    "fix": "Find and undo what lowered environment since loop 2",
+    "priority": 99,
+    "selected": true
+  },
+  {
+    "id": "G-cap-scalp-clip",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher-back",
+      "crops/high/R14-batter"
+    ],
+    "fix": "Delete or shrink-wrap the scalp faces inside the cap/helmet volume (cap-region vertex mask pulled 0.03 ft under the crown) so zero skin pixels fall inside the cap silhouette in R17-pitcher-back and on the umpire in R14-batter.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-stance-foot-ik",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R05-batter_feet",
+      "strips/high/R04"
+    ],
+    "fix": "Two-bone leg IK pinning each planted sole to the ground plane in the batting stance and swing; sole-to-shadow gap 0 px in R05-batter_feet and no foot slide across strips/high/R04.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-cleat-model",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R05-batter_feet",
+      "crops/high/R16-1B"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Replace the glossy loafer with a cleat: raised ankle collar, lace panel, white logo stripe, sole plate with visible spikes, matte leather roughness >= 0.6; smooth the jagged sock-to-shoe seam.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-swing-load-visible",
+    "category": "animation",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R04"
+    ],
+    "fix": "Hands drift back at least 0.4 ft and the front foot lifts and strides at least 0.8 ft across strips/high/R04 frames 1-4; move the contact bloom onto the bat-ball point in frame 5; dust puff at the plant foot.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-glove-model",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R06-catcher_glove"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Model the glove with four finger stalls, a laced web and an open pocket, plus a leather normal map; hide the glove-hand fingers (or skin them to the stalls) so zero skin pixels show through in R17-pitcher_hands.",
+    "priority": 0.469,
+    "selected": true
+  },
+  {
+    "id": "G-jersey-construction",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R02-batter_head",
+      "high/desktop/R05"
+    ],
+    "benchmark": "smb4-4",
+    "fix": "Cut the neckline and cuffs along smooth edge loops (no sawtooth), add a placket with buttons, a belt buckle and loops, and fold normals; smooth the chest so no bumps show; show the back number in high/desktop/R05.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-glove-reach-hits-ball",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R07",
+      "high/desktop/R09"
+    ],
+    "fix": "Set the glove IK target to the predicted ball position at the possession tick, so the glove is within one ball width of the ball in strips/high/R07 frame 8; add an overhead glove raise for fly balls and retime the R09 capture to the catch tick.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-title-menu-contrast",
+    "category": "ui",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS7",
+    "evidence": [
+      "high/desktop/R01"
+    ],
+    "benchmark": "ootp26-1",
+    "fix": "Make the title panel at least 90% opaque and give the selected button white text at >= 4.5:1 contrast on its fill, so 'Season' reads in high/desktop/R01.",
+    "priority": 0.45,
+    "selected": true
+  },
+  {
+    "id": "G-field-context",
+    "category": "readability",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS5",
+    "evidence": [
+      "high/desktop/R07",
+      "high/mobile/R07",
+      "high/landscape/R07",
+      "high/desktop/R10"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "Give the fielder with the ball a distinct marker (filled ring plus arrow); reframe portrait field view to keep first and third base in frame with no empty foreground below home; trim the landscape bars to <= 25% of height; cut to the HR trot once the ball clears the wall.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-park-construction",
+    "category": "environment",
+    "expectedGain": 1,
+    "severity": 4,
+    "effort": "L",
+    "workstream": "WS4",
+    "evidence": [
+      "high/desktop/R05",
+      "high/desktop/R10"
+    ],
+    "benchmark": "smb3-1; smb4-3",
+    "fix": "Replace the tiled crowd billboard with layered seat-row cards or impostors with no visible seam; pad and sign the wall behind home; replace cone/sphere trees with card-foliage trees and hide the backdrop seam; dress the batter's eye and the outfield walls with signage.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-masks-helmets",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R14-batter",
+      "crops/high/R02-batter_head",
+      "crops/high/R12-pitcher"
+    ],
+    "fix": "Model the masks as a welded frame with pads and a strap, touching the face; give the batting helmet one solid ear flap with no flat plane across the cheek and a matte brim instead of the white visor; verify that eyes and nose keep at least 25% luminance under the brim in R02-batter_head and R12-pitcher.",
+    "priority": 0.281,
+    "selected": false
+  },
+  {
+    "id": "G-body-variety",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "high/desktop/R05",
+      "crops/high/R16-1B"
+    ],
+    "benchmark": "smb4-4",
+    "fix": "Bake at least 3 MPFB builds (stocky catcher, tall-lean, average) as shape keys or variants and assign them per player, so 3 visibly different silhouettes appear in high/desktop/R05 and R07.",
+    "priority": 0.281,
+    "selected": false
+  }
+]

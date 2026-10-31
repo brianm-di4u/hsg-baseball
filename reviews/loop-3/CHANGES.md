@@ -39,3 +39,11 @@
   - Its first 0.12 s, the load and stride, plays while the pitch is in flight, so the batter strides into the ball whether or not he swings.
   - The swing proper then runs from the swing start to contact.
 - **Retarget:** rest alignment now matches whole bone frames (axis plus the character's forward), not only bone directions.
+
+## Performance (medium tier, phones)
+- No camera fill light on the medium tier: one light fewer per pixel. Skin keeps its own light floor.
+- Pixel-ratio cap is 1.35 (was 1.5). Medium-mobile GPU worst is 0.78 ms over three runs (estimated phone 19.5 ms; loop 2 measured 1.26 ms).
+
+## UI
+- Keyboard and mouse hints are hidden on touch (coarse-pointer) devices, in landscape too.
+- **Field camera:** it now eases out from the duel camera's computed pose, not from the last frame drawn. The start of the ease used to depend on frame timing.

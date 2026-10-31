@@ -61,7 +61,7 @@ if (N > 0 && N % 3 === 0) {
   const src = path.join(ROOT, 'benchmarks', pick);
   if (fs.existsSync(src)) {
     fs.copyFileSync(src, path.join(loopDir, 'calibration.png'));
-    fs.writeFileSync(path.join(loopDir, '.calibration'), pick + '\n');
+    fs.writeFileSync(path.join(ROOT, 'screenshots', `.calibration-loop-${N}`), `${pick}\n`); // the answer stays outside the review folder
     drift = '- **Calibration:** also open `reviews/loop-' + N + '/calibration.png`, an unlabeled reference frame. Score its `characters` and `lighting` on the rubric anchors alone, and add `"calibration": {"characters": x, "lighting": y}` to your JSON block.';
   }
 }
