@@ -472,7 +472,9 @@ function oakGeo() {
 }
 function trees(group, park, L, gator) {
   const n = W3.quality === 'low' ? 220 : 760;
-  const pineG = pineGeo(), oakG = oakGeo();
+  // the low tier (software GL, slow devices) keeps the plain cone and ball: the tiered shapes cost it frames
+  const low = W3.quality === 'low';
+  const pineG = low ? new T.ConeGeometry(1, 1, 7).translate(0, 0.5, 0) : pineGeo(), oakG = low ? new T.IcosahedronGeometry(1, 1) : oakGeo();
   const trunkG = new T.CylinderGeometry(0.5, 0.7, 1, 5); trunkG.translate(0, 0.5, 0);
   const dark = !!L.night;
   const bare = L.wood; // March at the historic park: bare grey hardwoods among dark pines (research/historic-park-visuals.md §7)

@@ -1,0 +1,221 @@
+[
+  {
+    "id": "G-regression-characters",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS6",
+    "fix": "Find and undo what lowered characters since loop 4",
+    "priority": 99,
+    "selected": true
+  },
+  {
+    "id": "G-regression-animation",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS6",
+    "fix": "Find and undo what lowered animation since loop 4",
+    "priority": 99,
+    "selected": true
+  },
+  {
+    "id": "G-regression-lighting",
+    "category": "lighting",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS6",
+    "fix": "Find and undo what lowered lighting since loop 4",
+    "priority": 99,
+    "selected": true
+  },
+  {
+    "id": "G-mask-fit",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R14-batter",
+      "crops/high/R05-ump_head",
+      "crops/high/R06-catcher_glove"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "Parent the umpire and catcher masks to the head bone with a perimeter frame, forehead and chin pads, cage 2-3 cm off the face spanning brow to chin; no bars below the chin in R05-ump_head or R14-batter.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-feet-grounding",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R05-batter_feet"
+    ],
+    "fix": "Foot-lock IK that snaps sole vertices to ground height in the stance and other planted phases; 0 px sole-to-dirt gap in R05-batter_feet at 2x.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-fill-and-night",
+    "category": "lighting",
+    "expectedGain": 0.6,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS3",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "high/desktop/R12"
+    ],
+    "benchmark": "smb3-3; smb4-1",
+    "fix": "Add a dirt-coloured hemisphere bounce or per-character fill so eyes read under dark helmets (face luminance > 15% in R02-batter_head); lower the night ambient and give each tower a spot falloff so high/desktop/R12 shows a luminance gradient between the infield and the outfield corners.",
+    "priority": 0.9,
+    "selected": true
+  },
+  {
+    "id": "G-helmet-flaps-brim",
+    "category": "characters",
+    "expectedGain": 0.4,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R10-batter-trot"
+    ],
+    "fix": "Model the ear flap as a curved shell continuous with the helmet over the ear with an ear hole; give the brim the helmet's paint material at metalness <= 0.1 so it is not a white chrome strip.",
+    "priority": 0.75,
+    "selected": true
+  },
+  {
+    "id": "G-ball-in-glove",
+    "category": "animation",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R07"
+    ],
+    "fix": "On possession, parent the ball to a pocket socket on the glove bone and blend the glove hand to the ball's intercept point over the last 3 ticks; in strips R07 frame 8 the ball is inside the glove outline.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-swing-load-stride",
+    "category": "animation",
+    "expectedGain": 0.6,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R04",
+      "high/desktop/R04"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Author a load (hands back, weight to the rear leg) and a front-foot stride during the pitch flight, then hip-first rotation with in-betweens; strips R04 frames 2-4 show the hands moving back and the front foot lifting, and no frame-to-frame bat jump over 60 degrees. The cause is the missing load, not desync.",
+    "priority": 0.563,
+    "selected": false
+  },
+  {
+    "id": "G-stocky-anatomy",
+    "category": "charfit",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R08-CF",
+      "crops/high/R17-pitcher_hands"
+    ],
+    "benchmark": "mpfb2_athlete_three_quarter",
+    "fix": "Cap the stocky upper-arm, deltoid and trapezius morphs, and flatten the pectoral bulge under the jersey with a cloth offset shell; R08-CF upper-arm width <= 1.15x the average build and no breast-like shading in R17-pitcher_hands.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-mobile-framing",
+    "category": "mobile",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS5",
+    "evidence": [
+      "high/mobile/R07",
+      "high/landscape/R10",
+      "high/landscape/R12"
+    ],
+    "benchmark": "ootp26-1",
+    "fix": "Portrait fielding camera framed to include both corner bags, with the lower fifth spent on the infield instead of backstop dirt; landscape restores a one-line pitcher, speed and batter strip and caps the result banner at 12% of the view height.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-hands-grip-bat",
+    "category": "characters",
+    "expectedGain": 0.4,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R02-batter_hands",
+      "crops/high/R14-batter"
+    ],
+    "fix": "IK both palms to handle sockets 6 cm apart, with fingers curled to bat radius; in R02-batter_hands the bat axis passes through both closed fists and the bottom hand's fingers wrap the handle.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-glove-leather",
+    "category": "characters",
+    "expectedGain": 0.4,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R06-catcher_glove"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Add a pocket cavity, a laced web readable from the front, edge binding and a stitch and lace normal map, plus a separate round, padded catcher's mitt; lacing visible in R17-pitcher_hands, distinct mitt in R06-catcher_glove.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-wordmark-decal",
+    "category": "characters",
+    "expectedGain": 0.4,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R02-batter_hands"
+    ],
+    "fix": "Render wordmarks and piping as a high-resolution or SDF decal projected onto the torso surface, with UVs clear of the sleeve seam; LAKE HAMILTON and HOT SPRINGS fully legible and inside the torso silhouette, no sawtooth on the belt edge.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-perf-tree-lod",
+    "category": "environment",
+    "expectedGain": 0,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS6",
+    "evidence": [
+      "perf.json soft duel 17.0 fps vs 19.9 baseline",
+      "perf.json medium mobile gpuMs 0.978 vs 0.509 in loop 4"
+    ],
+    "fix": "Performance-gate fix: low and medium tiers use the loop-4 single-cone and single-ball tree meshes (or impostor cards beyond 60 m); pass when software GL duel >= 18.5 fps with p50 <= 53 ms over 3 runs and max unthrottled medium-mobile gpuMs <= 0.8 ms.",
+    "priority": 0,
+    "selected": false
+  }
+]

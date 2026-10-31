@@ -271,6 +271,60 @@
         "effortWeights": "S=1, M=2, L=4"
       },
       "date": "2026-10-31"
+    },
+    {
+      "loop": 5,
+      "scores": {
+        "characters": 5,
+        "charfit": 5.5,
+        "animation": 5,
+        "environment": 5.5,
+        "lighting": 5.5,
+        "ui": 6,
+        "readability": 6,
+        "mobile": 6
+      },
+      "total": 44.5,
+      "stalls": 1,
+      "verdict": "continue",
+      "critics": {
+        "critic-claude": {
+          "characters": 5,
+          "charfit": 5,
+          "animation": 5,
+          "environment": 5.5,
+          "lighting": 5.5,
+          "ui": 6,
+          "readability": 6,
+          "mobile": 6.5
+        },
+        "critic-codex": {
+          "characters": 5,
+          "charfit": 5.5,
+          "animation": 5,
+          "environment": 5.5,
+          "lighting": 5,
+          "ui": 6.5,
+          "readability": 5.5,
+          "mobile": 6
+        },
+        "advocate": {
+          "characters": 5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 5.5,
+          "lighting": 5.5,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6.5
+        }
+      },
+      "calibration": {
+        "perfGate": "fail (narrow): software GL duel 17.0 fps / p50 57.1 ms vs 19.9 / 49.3 baseline, outside the 18.2-19.9 band of 5 prior runs, +28.5k tris from the tree rebuild; grounder 14.2 vs 15.1 within noise; p95 flat. High desktop min 472.2 fps / p95 3.1 ms pass; medium phone proxy min 50.6 fps pass; est. phone GPU 0.978 ms x 25 = 24.5 ms <= 26 (up from 14.4); heap 73.8/84.3/71.5 MB pass; download not in perf.json",
+        "factRulings": "R04 freeze is pre-swing, not desync (A wrong), but no load and a 4-5 pose swap (real); R06 ball at the hand (A wrong); landscape R10 ball visible below the banner (A wrong); helmeted faces not all black, only R02 dark-helmet case (A overstated); trot elbows bent and alternating (A wrong); three builds visible (Codex wrong); grip: R14 top hand wraps, R02 bottom hand open (both partly right); R07 frame 8 ball not in the glove (judge-observed, recurring); raised rubber slab (real)",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
     }
   ]
 }

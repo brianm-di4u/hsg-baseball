@@ -39,9 +39,9 @@ os.makedirs(OUT, exist_ok=True)
 
 # body builds: MPFB phenotype (0..1). High-school varsity: young adults, athletic.
 VARIANTS = {
-    'lean': dict(age=0.44, muscle=0.55, weight=0.3, height=0.74, proportions=0.9),  # ≈ 6 ft 4, rangy
+    'lean': dict(age=0.44, muscle=0.6, weight=0.36, height=0.72, proportions=0.88),  # ≈ 6 ft 3, rangy
     'average': dict(age=0.46, muscle=0.75, weight=0.55, height=0.62, proportions=0.8),  # ≈ 6 ft 0
-    'stocky': dict(age=0.52, muscle=0.9, weight=1.0, height=0.48, proportions=0.6),  # ≈ 5 ft 8, heavy-set
+    'stocky': dict(age=0.5, muscle=0.88, weight=0.9, height=0.5, proportions=0.66),  # ≈ 5 ft 8, heavy-set
 }
 
 addon_utils.enable('bl_ext.user_default.mpfb', default_set=True, persistent=True)
@@ -321,11 +321,18 @@ def make_cap(rig, body, helmet=False):
     for j in range(12):
         a, b = brim[j], brim[j + 1]
         thin.append(bm.faces.new((a[0], b[0], b[1], a[1])))
-    if helmet:  # ear flaps down both sides
-        for s in (-1, 1):
-            x = c.x + s * (rx + pad); y0, y1 = c.y - ry * 0.55, c.y + ry * 0.35
-            q = [bm.verts.new((x, y0, z0)), bm.verts.new((x, y1, z0)), bm.verts.new((x, y1 - 0.05, z0 - 0.42)), bm.verts.new((x, y0 + 0.05, z0 - 0.38))]
-            thin.append(bm.faces.new(q if s > 0 else list(reversed(q))))
+    if helmet:  # ear flaps: the shell carries on down over each ear, curving in toward the jaw (rows below the band)
+        drop = [0.0, 0.14, 0.28, 0.4]
+        flap = [j for j in range(seg) if abs(math.cos(j / seg * math.tau)) > 0.55 and math.sin(j / seg * math.tau) > -0.45]
+        rows = []
+        for k, dz in enumerate(drop):
+            sh = 1.0 - 0.06 * k  # tucks in under the cheekbone
+            rows.append({j: verts[0][j] if k == 0 else bm.verts.new((c.x + math.cos(j / seg * math.tau) * (rx + pad) * sh,
+                                                                      c.y + math.sin(j / seg * math.tau) * (ry + pad) * sh, z0 - dz)) for j in flap})
+        for k in range(len(drop) - 1):
+            for j in flap:
+                j2 = (j + 1) % seg
+                if j2 in rows[k]: thin.append(bm.faces.new((rows[k + 1][j], rows[k + 1][j2], rows[k][j2], rows[k][j])))
     bmesh.ops.solidify(bm, geom=thin, thickness=0.025)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     o = new_obj('helmet' if helmet else 'cap', bm)
@@ -337,7 +344,7 @@ def make_cap(rig, body, helmet=False):
 def make_mask(rig, body):
     c, rx, ry, top = head_frame(rig, body)
     bm = bmesh.new()
-    zf0, zf1 = c.z - 1.0, c.z - 0.12  # chin to brow
+    zf0, zf1 = c.z - 0.66, c.z + 0.02  # chin to brow (c.z is the cap band, at the forehead)
     yf = c.y - ry - 0.07  # the cage sits just off the face
     def bar(p0, p1, r=0.022):
         d = (Vector(p1) - Vector(p0)); n = 6
@@ -432,6 +439,49 @@ def make_glove(rig, body):
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     o = new_obj('glove', bm); region_all(o, REG['glove']); rigid(o, rig, 'glove')
     return o
+
+
+def make_decal(rig, body, name, front):
+    """The jersey lettering (front) or number (back): a grid laid onto the dressed torso by rays, 0.012 ft proud of
+    the cloth, skinned with the weights of the nearest body vertex, so it wraps the chest and bends with the pose.
+    UVs run 0..1 left to right as seen from outside."""
+    from mathutils.bvhtree import BVHTree
+    from mathutils.kdtree import KDTree
+    dg = bpy.context.evaluated_depsgraph_get(); bvh = BVHTree.FromObject(body, dg)
+    me = body.data; kd = KDTree(len(me.vertices))
+    for v in me.vertices: kd.insert(v.co, v.index)
+    kd.balance()
+    o = bone_pos(rig, 'spine_03')
+    w, h, up = (0.92, 0.26, 0.5) if front else (0.85, 0.85, 0.4)  # across the chest only (wider wraps onto the flanks)
+    nx, nz = 36, 10 if front else 20
+    dy = -1 if front else 1
+    bm = bmesh.new(); grid = []; uv = []
+    for j in range(nz + 1):
+        row = []
+        for i in range(nx + 1):
+            x = -w / 2 + w * i / nx; z = o.z + up - h / 2 + h * j / nz
+            hit = bvh.ray_cast(Vector((x, o.y + dy * 3, z)), Vector((0, -dy, 0)))
+            p = (hit[0] + hit[1] * 0.03) if hit[0] else Vector((x, o.y + dy * 0.5, z))
+            row.append(bm.verts.new(p)); uv.append((i / nx if front else 1 - i / nx, j / nz))
+        grid.append(row)
+    for j in range(nz):
+        for i in range(nx):
+            q = (grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i])
+            bm.faces.new(q if front else tuple(reversed(q)))
+    bm.verts.index_update()
+    m = bpy.data.meshes.new(name); bm.to_mesh(m); bm.free()
+    uvl = m.uv_layers.new(name='UVMap')
+    for poly in m.polygons:
+        for li in poly.loop_indices: uvl.data[li].uv = uv[m.loops[li].vertex_index]
+    d = bpy.data.objects.new(name, m); bpy.context.scene.collection.objects.link(d)
+    names = {g.index: g.name for g in body.vertex_groups}
+    for v in m.vertices:
+        _, idx, _ = kd.find(v.co)
+        for g in me.vertices[idx].groups:
+            n = names[g.group]
+            if n in BONES: (d.vertex_groups.get(n) or d.vertex_groups.new(name=n)).add([v.index], g.weight, 'REPLACE')
+    d.parent = rig; mod = d.modifiers.new('Armature', 'ARMATURE'); mod.object = rig
+    return d
 
 
 # ------------------------------------------------------------------ 4. assemble, LODs
@@ -600,6 +650,7 @@ for vname in args.variants.split(','):
            shell(body, rig, 'shinguard_l', lambda c, n: n.y < -0.2 and c.x > 0.05 and bone_pos(rig, 'foot_l').z + 0.1 < c.z < bone_pos(rig, 'calf_l').z + 0.25, 0.08, 'shinguard_l', REG['gear']),
            shell(body, rig, 'shinguard_r', lambda c, n: n.y < -0.2 and c.x < -0.05 and bone_pos(rig, 'foot_r').z + 0.1 < c.z < bone_pos(rig, 'calf_r').z + 0.25, 0.08, 'shinguard_r', REG['gear']),
            make_glove(rig, body), make_bat(rig)]
+    decals = [make_decal(rig, body, 'DECAL_FRONT', True), make_decal(rig, body, 'DECAL_BACK', False)]
     lod0 = join([body, *extras, *acc], 'LOD0')
     # tidy for export: one material slot, triangulated
     lod0.data.materials.clear()
@@ -629,7 +680,7 @@ for vname in args.variants.split(','):
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, f'body-{vname}.blend'))
     # high: all three levels; medium (phones): the two coarser. Clips ship once, with the average build.
     for tier, keep in (('high', lods), ('medium', lods[1:])):
-        select_only(rig, *keep)
+        select_only(rig, *keep, *decals)
         fn = os.path.join(OUT, f'body-{vname}-{tier}.glb')
         bpy.ops.export_scene.gltf(filepath=fn, export_format='GLB', use_selection=True, export_skins=True,
                                   export_animations=vname == 'average' and not args.no_anim, export_animation_mode='NLA_TRACKS', export_vertex_color='ACTIVE',

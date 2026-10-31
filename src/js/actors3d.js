@@ -88,7 +88,7 @@ if (rid == ${RG.skin}) diffuseColor.rgb *= texture2D(map, vMapUv).rgb * 2.0; // 
       // the fabric normal map (high tier) only on cloth: jersey, pants, socks, undershirt, trim
       .replace('#include <normal_fragment_maps>', 'vec3 nBase = normal;\n#include <normal_fragment_maps>\nif (!(rid == 0 || rid == 1 || rid == 2 || rid == 8 || rid == 15)) normal = nBase;')
       // skin keeps a little of its own light: faces under a brim or a helmet still show eyes and brows
-      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\nif (rid == ${RG.skin}) totalEmissiveRadiance += diffuseColor.rgb * 0.09 + vec3(0.016, 0.012, 0.01);`);
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\nif (rid == ${RG.skin}) totalEmissiveRadiance += diffuseColor.rgb * 0.16 + vec3(0.03, 0.022, 0.018);`);
   };
   m.customProgramCacheKey = () => 'ds-palette';
   return m;
@@ -108,7 +108,7 @@ export function dress(actor, kit, o = {}) {
   if (actor.dressKey === dk) return; // palette unchanged since last frame
   actor.dressKey = dk;
   setPal(m, RG.jersey, kit.jersey, kit.wool ? 0.9 : 0.68); setPal(m, RG.pants, kit.pants, kit.wool ? 0.9 : 0.7);
-  setPal(m, RG.sock, kit.sock); setPal(m, RG.cap, kit.cap, 0.8); setPal(m, RG.helmet, kit.cap, 0.28);
+  setPal(m, RG.sock, kit.sock); setPal(m, RG.cap, kit.cap, 0.8); setPal(m, RG.helmet, kit.cap, 0.38);
   setPal(m, RG.under, o.umpire ? kit.jersey : kit.trim, 0.8); setPal(m, RG.trim, kit.trim);
   setPal(m, RG.skin, o.skin || '#C68B62', 0.6); setPal(m, RG.shoe, o.umpire ? '#111111' : '#16161A', 0.45); setPal(m, RG.belt, o.umpire ? '#111111' : '#1E1E22', 0.5);
   setPal(m, RG.glove, '#8A5528', 0.55); setPal(m, RG.white, '#F3F0E8', 0.45); setPal(m, RG.bat, '#D6B07A', 0.45); setPal(m, RG.dark, '#18181C', 0.5);
@@ -122,13 +122,32 @@ export function dress(actor, kit, o = {}) {
   actor.kit = kit;
 }
 
+// Shadow-map depth for players that leaves out caps and helmets: a brim's sun shadow would black out the face
+// under it (headwear stays lit and visible; only its shadow goes).
+let depthMat = null;
+function shadowDepth() {
+  if (depthMat) return depthMat;
+  depthMat = new T.MeshDepthMaterial({ depthPacking: T.RGBADepthPacking });
+  depthMat.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec4 color; varying float vRid;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRid = color.r;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vRid;')
+      .replace('void main() {', `void main() {\nint rid = int(clamp(vRid * 16.0, 0.0, 15.0)); if (rid == ${RG.cap} || rid == ${RG.helmet}) discard;`);
+  };
+  depthMat.customProgramCacheKey = () => 'ds-depth-noheadwear';
+  return depthMat;
+}
 // A form: one rigged body (its own skeleton, mixer and clip actions) with one or more detail levels.
 function makeForm(proto, clips, mat) {
   const root = T.cloneSkinned(proto);
-  const lods = [];
+  const lods = [], skinDecals = {};
   root.traverse((o) => {
     if (!o.isSkinnedMesh) return;
-    o.material = mat; o.castShadow = true; o.receiveShadow = true;
+    if (o.name.startsWith('DECAL_')) { // v3: lettering and number skinned onto the jersey (attachDecals gives them a material)
+      o.geometry.boundingSphere = new T.Sphere(new T.Vector3(0, 3.2, 0), 5.2); o.frustumCulled = true; o.visible = false;
+      skinDecals[o.name === 'DECAL_FRONT' ? 'word' : 'num'] = o; return;
+    }
+    o.material = mat; o.castShadow = true; o.receiveShadow = true; o.customDepthMaterial = shadowDepth();
     // a fixed bound around the player in any pose (feet): a skinned mesh can't be culled by its rest-pose box
     o.geometry.boundingSphere = new T.Sphere(new T.Vector3(0, 3.2, 0), 5.2); o.frustumCulled = true;
     const m = /LOD(\d)/.exec(o.name); lods[m ? +m[1] : lods.length] = o;
@@ -142,7 +161,7 @@ function makeForm(proto, clips, mat) {
   const mixer = new T.AnimationMixer(root);
   const acts = {};
   for (const [n, c] of Object.entries(clips)) { const a = mixer.clipAction(c); a.play(); a.enabled = false; a.setEffectiveWeight(0); acts[n] = a; }
-  return { root, lods, bones, mixer, acts, feet, lod: 0 }; // lods[k] is LODk; a tier's pack may leave out the finest
+  return { root, lods, bones, mixer, acts, feet, skinDecals, lod: 0 }; // lods[k] is LODk; a tier's pack may leave out the finest
 }
 export function makeActor(scene, i = 0) {
   const wrap = new T.Group();
@@ -253,7 +272,7 @@ export function place(actor, x, y, z, faceX, faceY, mirror = false) {
   // three model faces +Z; target direction in three is (dx, −dy) → yaw = atan2(dx, −dy)
   actor.root.scale.set(mirror ? -1 : 1, 1, 1);
   actor.mirror = mirror;
-  if (actor.numMesh) actor.numMesh.scale.x = actor.wordMesh.scale.x = mirror ? -1 : 1; // decals read the right way round
+  if (actor.numMesh && !(actor.form.decals && actor.form.decals.skinned)) actor.numMesh.scale.x = actor.wordMesh.scale.x = mirror ? -1 : 1; // decals read the right way round
 }
 
 // Jersey decals: the number on the back and the school (or club) name across the front, two small planes on the
@@ -270,6 +289,11 @@ function decalTex(key, w, h, draw) {
 function attachDecals(actor) {
   const f = actor.form, chest = actor.bones.chest;
   if (!chest) return;
+  if (!f.decals && f.skinDecals.word && f.skinDecals.num) { // wrapped on the jersey, bending with it
+    const mk = () => new T.MeshStandardMaterial({ transparent: true, roughness: 0.75, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, side: T.DoubleSide });
+    f.skinDecals.num.material = mk(); f.skinDecals.word.material = mk();
+    f.decals = { num: f.skinDecals.num, word: f.skinDecals.word, skinned: true };
+  }
   if (!f.decals) {
     const v = A.v3 && actor.formKey !== 'v2' ? A.v3.meta.variants[actor.formKey] : null;
     f.decals = { num: decal(actor, chest, 0.95, 0.95, false, v && v.chest), word: decal(actor, chest, 1.15, 0.3, true, v && v.chest) };
@@ -312,7 +336,24 @@ export function setNumber(actor, num, kit, team) {
     while (x.measureText(word).width > W - 12 && fs > 18) { fs -= 2; x.font = font(fs); }
     x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = kit.num || '#000'; x.fillText(word, W / 2, H / 2 + 2);
   });
-  for (const m of [actor.numMesh, actor.wordMesh]) { m.material.needsUpdate = true; m.scale.x = actor.mirror ? -1 : 1; }
+  const skinned = actor.form.decals && actor.form.decals.skinned;
+  for (const m of [actor.numMesh, actor.wordMesh]) {
+    m.material.needsUpdate = true;
+    if (!skinned) m.scale.x = actor.mirror ? -1 : 1;
+    else if (m.material.map) m.material.map = forSkin(m.material.map, actor.mirror); // glTF UVs; a mirrored rig draws the text mirrored
+  }
+}
+// A decal texture for the skinned decals (cached): glTF UVs want flipY off; on a mirrored (left-handed) rig the text
+// is also drawn left-right flipped, which the mirrored geometry turns back round.
+const skinCache = new Map();
+function forSkin(t, mirror) {
+  const k = `${t.uuid}|${mirror ? 1 : 0}`;
+  if (!skinCache.has(k)) {
+    const f = t.clone(); f.flipY = false;
+    if (mirror) { f.wrapS = T.RepeatWrapping; f.repeat.x = -1; f.offset.x = 1; }
+    f.needsUpdate = true; skinCache.set(k, f);
+  }
+  return skinCache.get(k);
 }
 
 // World position of a bone (three coords).
