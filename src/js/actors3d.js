@@ -88,7 +88,7 @@ if (rid == ${RG.skin}) diffuseColor.rgb *= texture2D(map, vMapUv).rgb * 2.0; // 
       // the fabric normal map (high tier) only on cloth: jersey, pants, socks, undershirt, trim
       .replace('#include <normal_fragment_maps>', 'vec3 nBase = normal;\n#include <normal_fragment_maps>\nif (!(rid == 0 || rid == 1 || rid == 2 || rid == 8 || rid == 15)) normal = nBase;')
       // skin keeps a little of its own light: faces under a brim or a helmet still show eyes and brows
-      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\nif (rid == ${RG.skin}) totalEmissiveRadiance += diffuseColor.rgb * 0.16 + vec3(0.03, 0.022, 0.018);`);
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\nif (rid == ${RG.skin}) totalEmissiveRadiance += diffuseColor.rgb * 0.22 + vec3(0.045, 0.034, 0.027);`);
   };
   m.customProgramCacheKey = () => 'ds-palette';
   return m;
@@ -427,7 +427,7 @@ export function setNumber(actor, num, kit, team) {
     let fs = 88; x.font = font(fs);
     while (x.measureText(word).width > W - 40 && fs > 36) { fs -= 4; x.font = font(fs); }
     x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
-    x.lineWidth = Math.round(fs * 0.17); x.strokeStyle = kit.jersey || '#FFF'; x.strokeText(word, W / 2, H / 2 + 4);
+    x.lineWidth = Math.round(fs * 0.1); x.strokeStyle = kit.jersey || '#FFF'; x.strokeText(word, W / 2, H / 2 + 4);
     x.fillStyle = kit.num || '#000'; x.fillText(word, W / 2, H / 2 + 4);
   });
   const skinned = actor.form.decals && actor.form.decals.skinned;

@@ -84,7 +84,7 @@ export async function init3d(stage, onReady, art = []) {
     // contact shadows: a dark oval under each sole, along the foot (two per actor, one instanced draw), shrinking as a
     // foot lifts. Tight and dark at the middle: the sun's shadow map is too soft and offset to show where a sole meets the dirt
     const ct = document.createElement('canvas'); ct.width = ct.height = 64; const ctx = ct.getContext('2d');
-    const cgr = ctx.createRadialGradient(32, 32, 1, 32, 32, 32); cgr.addColorStop(0, 'rgba(0,0,0,0.95)'); cgr.addColorStop(0.5, 'rgba(0,0,0,0.7)'); cgr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = cgr; ctx.fillRect(0, 0, 64, 64);
+    const cgr = ctx.createRadialGradient(32, 32, 1, 32, 32, 32); cgr.addColorStop(0, 'rgba(0,0,0,1)'); cgr.addColorStop(0.62, 'rgba(0,0,0,0.85)'); cgr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = cgr; ctx.fillRect(0, 0, 64, 64);
     const cg = new T.PlaneGeometry(1, 1); cg.rotateX(-Math.PI / 2);
     R3.contact = new T.InstancedMesh(cg, new T.MeshBasicMaterial({ map: new T.CanvasTexture(ct), color: '#000000', transparent: true, opacity: 0.8, depthWrite: false, fog: false }), 32);
     R3.contact.frustumCulled = false; R3.contact.renderOrder = 1; R3.scene.add(R3.contact);
@@ -167,7 +167,7 @@ function contactPass() {
       if (t) { q.setFromMatrixPosition(t.matrixWorld); yaw = Math.atan2(q.x - p.x, q.z - p.z); p.add(q).multiplyScalar(0.5); }
       const lift = Math.max(0, p.y - g.y - 0.2), s = Math.max(0, 1 - lift * 1.5);
       if (s <= 0.05) continue;
-      m.compose(at.set(p.x, g.y + 0.06, p.z), one.setFromAxisAngle(up, yaw), sc.set(0.62 * s, 1, 1.35 * s));
+      m.compose(at.set(p.x, g.y + 0.06, p.z), one.setFromAxisAngle(up, yaw), sc.set(0.5 * s, 1, 1.25 * s));
       R3.contact.setMatrixAt(n++, m);
     }
   }
@@ -291,7 +291,7 @@ function ikArm(actor, side, target) {
 }
 // The swing clip's first LOAD seconds are the load and stride (mocap): played while the pitch is on its way, so the
 // batter strides into the ball, then the swing proper runs from the swing start to contact.
-const LOAD = 0.12;
+const LOAD = 0.2; // the stride: the front foot lifts (peak at 0.12) and lands by 0.2, on every pitch, swing or take
 function loadAt(g, pt) { const f = g.phaseT / (pt.T * g.scale); return LOAD * clamp01((f - 0.25) / 0.6); }
 // The batter's free (left) hand on the handle, just below the right hand on the bat's axis.
 function gripBat(actor) {
@@ -356,9 +356,12 @@ function fieldCamera(g, tl, t, park, ui) {
   const bx = sx / n, by = sy / n, bz = sz / n;
   const intro = clamp01(t / 0.7), ease = intro * intro * (3 - 2 * intro);
   const reach = Math.hypot(bx, by);
-  const tx = lerp(0, bx, 0.7), ty = lerp(70, Math.max(30, by), 0.65), tz = Math.min(90, bz * 0.62); // look up with high flies so the ball stays in frame
+  const tx = lerp(0, bx, 0.7), ty = lerp(70, Math.max(30, by), 0.65) + (portrait ? 14 : 0), tz = Math.min(90, bz * 0.62); // look up with high flies so the ball stays in frame
   // closer and tighter than a stadium's high-home camera: fielders read at about 30 px instead of 20
-  const dist = (portrait ? 130 : 150) + reach * 0.3, h = 54 + reach * 0.15;
+  // portrait: higher and steeper, with the field of view set by the screen's shape so the corner bases stay in (about
+  // 40° across), instead of a fixed vertical angle that left a 29° sliver of field under a band of sky
+  const dist = (portrait ? 135 : 150) + reach * 0.3, h = (portrait ? 88 : 54) + reach * 0.15;
+  const fovP = Math.min(76, 2 * Math.atan(Math.tan(20 * Math.PI / 180) / Math.max(0.3, R3.W / R3.H)) * 180 / Math.PI);
   const dirx = tx / Math.max(1, Math.hypot(tx, ty + 40)), diry = (ty + 40) / Math.max(1, Math.hypot(tx, ty + 40));
   const px = tx - dirx * dist * 0.5, py = ty - diry * dist, pz = h;
   const c = R3.cam;
@@ -367,7 +370,7 @@ function fieldCamera(g, tl, t, park, ui) {
   const p1 = g2t(px, py, pz), l1 = g2t(tx, ty, tz);
   c.position.lerpVectors(d0.p, p1, ease);
   const look = new T.Vector3().lerpVectors(d0.l, l1, ease);
-  c.fov = lerp(d0.fov || 40, portrait ? 54 : 34, ease);
+  c.fov = lerp(d0.fov || 40, portrait ? fovP : 34, ease);
   c.lookAt(look); c.updateProjectionMatrix();
   return { tx, ty };
 }
@@ -451,10 +454,12 @@ function duelScene(g, ui) {
   const bunting = (g.bunt && ui.userBats) || (sw && sw.bunt);
   if (bunting && g.phase !== 'result') pose(bat, 'bat_bunt', tA);
   else if (sw && pt && ['flight', 'result', 'play', 'umpwait'].includes(g.phase)) {
-    const T0 = pt.T * g.scale;
-    const st = g.swing ? g.swing.at : T0 + (sw.u || 0) * ui.W - 0.1 * g.scale;
-    const k = (0.267 - LOAD) / (0.1 * g.scale); // the swing proper, from the end of the load to contact at 0.267
-    const ct = g.phase === 'flight' ? LOAD + (g.phaseT - st) * k : 0.9;
+    // the press fires the hands: from the end of the stride to contact at 0.267 in the sim's swing lag (contact.js
+    // SWING_LAG, 0.1 real s), then the follow-through runs on at the clip's own speed (it used to snap to the finish)
+    const T0 = pt.T * g.scale, D = 0.1 * g.scale;
+    const st = g.swing ? g.swing.at : T0 + (sw.u || 0) * ui.W - D;
+    const ct = g.phase === 'flight' ? (g.phaseT < st + D ? LOAD + (g.phaseT - st) * (0.267 - LOAD) / D : 0.267 + (g.phaseT - st - D) / g.scale)
+      : Math.min(0.9, 0.267 + (T0 - st - D + g.phaseT) / g.scale);
     if (ct < LOAD) pose(bat, 'bat_swing', loadAt(g, pt)); else pose(bat, 'bat_swing', ct);
   } else if (pt && g.phase === 'flight') pose(bat, 'bat_swing', loadAt(g, pt)); // load and stride while the pitch comes
   else pose(bat, 'bat_stance', tA);

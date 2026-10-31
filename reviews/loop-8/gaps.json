@@ -1,0 +1,188 @@
+[
+  {
+    "id": "G-mask-aliasing",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R07-SS",
+      "crops/high/R02-batter_head",
+      "crops/high/R05-batter_feet"
+    ],
+    "fix": "Raise the sock-top, yoke and cleat-panel masks to at least 1024 px with mipmapped linear filtering (or model the boundaries as geometry); no stair-stepped edges in R07-SS, R02-batter_head, R05-batter_feet or mobile R02.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-ad-panel-overlap",
+    "category": "environment",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS4",
+    "evidence": [
+      "crops/high/R02-batter_hands",
+      "crops/high/R05-ump_head",
+      "crops/high/R07-batter-runner"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "Space or de-duplicate the wall ad boards so no two board quads overlap in x; no split or garbled words in R02-batter_hands, R05-ump_head, R07-batter-runner or R17-pitcher-back.",
+    "priority": 0.75,
+    "selected": true
+  },
+  {
+    "id": "G-face-fill",
+    "category": "lighting",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS3",
+    "evidence": [
+      "crops/high/R02-batter_head"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Hemisphere sky-fill plus ground-bounce term on skin (or an unshadowed per-player face fill) on day presets; eyes distinguishable in R02-batter_head and under-brim face luminance at least 40% of the cheek below.",
+    "priority": 0.75,
+    "selected": true
+  },
+  {
+    "id": "G-cloth-detail",
+    "category": "characters",
+    "expectedGain": 0.75,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R06-catcher_glove",
+      "crops/high/R10-batter-trot"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Flannel weave normal map plus baked fold normal maps at elbow, armpit, waist blouse, knee and seat; modelled buckle and belt loops; raised collar edge. Folds visible in R17-pitcher_hands, R10-batter-trot and the batter's seat in R06-catcher_glove.",
+    "priority": 0.703,
+    "selected": true
+  },
+  {
+    "id": "G-stance-foot-lock",
+    "category": "animation",
+    "expectedGain": 0.25,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R05-batter_feet"
+    ],
+    "fix": "Two-bone foot IK in stance, set and ready clips pinning each sole to the ground when clip height < 0.1 ft; both soles touch their contact ovals in R05-batter_feet.",
+    "priority": 0.469,
+    "selected": true
+  },
+  {
+    "id": "G-mask-mount",
+    "category": "characters",
+    "expectedGain": 0.25,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R05-ump_head",
+      "crops/high/R05-batter-front"
+    ],
+    "fix": "Weld cage bars into one mesh (no join rings), add a perimeter frame, chin and forehead pads and straps, seat the cage within 0.05 ft of the face; no stubs or air gap in R05-ump_head and R05-batter-front.",
+    "priority": 0.469,
+    "selected": true
+  },
+  {
+    "id": "G-lettering-fit",
+    "category": "characters",
+    "expectedGain": 0.25,
+    "severity": 2,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R12-pitcher",
+      "crops/high/R02-batter_hands"
+    ],
+    "fix": "Re-kern the wordmark so no glyphs overlap, mask piping under the decal footprint, clip the decal to the torso; LAKESIDE has a gap between every letter in R12-pitcher and HOT SPRINGS shows its I with no glyph outside the torso in R02-batter_hands.",
+    "priority": 0.469,
+    "selected": true
+  },
+  {
+    "id": "G-run-arms",
+    "category": "animation",
+    "expectedGain": 0.25,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R07-SS",
+      "crops/high/R08-CF",
+      "strips/high/R10"
+    ],
+    "fix": "Glove-arm counter-swing (shoulder pitch range >= 40 degrees per cycle) and a loose fist on the free hand (finger curl >= 60 degrees) in run and trot clips; glove position varies across strips R07 1-4 and R10, no flat palm in R07-SS.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-glove-model",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R06-catcher_glove"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Model a pocket, laced web and finger stalls on the fielder's glove, a round padded catcher's mitt and knee-cupped leg guards that follow the shin, with a leather normal map; pocket and web visible in R17-pitcher_hands, guards within 0.15 ft of the shin in R06-catcher_glove.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-shoulder-mass",
+    "category": "charfit",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R03-pitcher",
+      "crops/high/R08-CF"
+    ],
+    "benchmark": "mpfb2_athlete_three_quarter",
+    "fix": "Cut deltoid and upper-arm girth about 15% and lower clavicle rest in set and stance poses; sloped shoulder outline and visible neck in R03-pitcher, front reference IoU >= 0.90.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-swing-load-stride",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R04"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Add a pre-swing load (hands back >= 0.3 ft, front heel lift) and a front-foot stride >= 0.5 ft, plus a wrapped finish over the lead shoulder; visible in strip R04 panels 2-4 and 7-8.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-landscape-overlap",
+    "category": "mobile",
+    "expectedGain": 0.25,
+    "severity": 2,
+    "effort": "S",
+    "workstream": "WS7",
+    "evidence": [
+      "high/landscape/R05"
+    ],
+    "fix": "Move landscape pitch-select buttons into the side gutters or raise the pitching camera; no button overlaps a player in landscape R05.",
+    "priority": 0.375,
+    "selected": false
+  }
+]

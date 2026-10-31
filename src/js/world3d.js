@@ -170,6 +170,8 @@ function boundary(park) {
 // Six boards, each about 12 ft wide, across one 72 ft tile (canvas 2048 × 100).
 const SPONSORS = [['REDBIRD FEED & SEED', '#7A1E1E', '#F4E9D0'], ['TWIN OAKS HARDWARE', '#1F3A5F', '#FFFFFF'], ['RIDGELINE PIZZA', '#F2B705', '#1B1B1B'],
   ['VALLEY TIRE & LUBE', '#1B1B1B', '#F2B705'], ['MAGNET COVE MOTORS', '#F4F1EA', '#8E2F1F'], ['GATOR FARM ICE CREAM', '#2E6A3C', '#FFFFFF']];
+// how many whole sponsor boards (72 ft holds one of each) fit a run of wall
+const wholeBoards = (len) => Math.max(1, Math.round(len / (72 / SPONSORS.length)));
 function sponsorTex(old) {
   const k = `sponsors|${old ? 1 : 0}`;
   if (W3.tex[k]) return W3.tex[k];
@@ -284,7 +286,7 @@ function seating(group, a, b, rows, L, o = {}) {
     if (L.wood) { const fas = box(len + 4, 2.4, 0.4, std('#E9DFC6')); fas.position.set(len / 2, H + 8.6, -2.6); holder.add(fas); }
   }
   if (o.signs) { // sponsor boards along the front wall, facing the field
-    const t = sponsorTex(L.wood).clone(); t.needsUpdate = true; t.repeat.set(len / 72, 1);
+    const t = sponsorTex(L.wood).clone(); t.needsUpdate = true; t.repeat.set(wholeBoards(len) / SPONSORS.length, 1); // whole boards, no cut names
     const sb = new T.Mesh(new T.PlaneGeometry(len, Math.min(3.4, base - 0.3)), new T.MeshStandardMaterial({ map: t, roughness: 0.75 }));
     sb.position.set(len / 2, Math.min(3.4, base - 0.3) / 2 + 0.15, -0.06); sb.rotation.y = Math.PI; holder.add(sb);
   }
@@ -708,7 +710,10 @@ export function buildPark(parkKey, night) {
   for (const [a0, a1] of [[235, 250], [290, 305]]) {
     const arc = []; for (let a = a0; a <= a1; a += 3) arc.push([57.7 * Math.cos(a * D2R), 57.7 * Math.sin(a * D2R) + 4]);
     const signs = wallRibbon(arc, arc.map(() => 3.4), new T.MeshStandardMaterial({ map: sponsorTex(L.wood).clone(), roughness: 0.75, side: T.DoubleSide }), 3.4);
-    signs.material.map.needsUpdate = true; signs.material.map.repeat.set(-3.4 / 72, 1); signs.material.map.offset.x = a0 > 260 ? 0.5 : 0; // repeat negative: seen from inside
+    // whole boards from end to end (a board cut at either end read as two boards overlapping); repeat negative: seen from inside
+    let arcLen = 0; for (let i = 1; i < arc.length; i++) arcLen += Math.hypot(arc[i][0] - arc[i - 1][0], arc[i][1] - arc[i - 1][1]);
+    const N = SPONSORS.length, m = signs.material.map;
+    m.needsUpdate = true; m.repeat.set(-(wholeBoards(arcLen) / N) / (arcLen / 3.4), 1); m.offset.x = (a0 > 260 ? Math.round(N / 2) : 0) / N;
     signs.position.y = 0.3; signs.castShadow = false; root.add(signs);
   }
   // backstop netting

@@ -1,0 +1,88 @@
+{
+ "method": "Silhouette IoU of LOD0 (bind pose, no accessories) against the reference turnaround masks; then each LOD at the game's on-screen heights against LOD0 rendered 4\u00d7 and box-filtered (pixel error = share of the player's pixels off by > 12/255; LOD0's own row is the aliasing floor). Workbench, region palette, three-quarter view.",
+ "reference": "mpfb2_athlete",
+ "height_ft": 6.047657063230872,
+ "shape": {
+  "front": 0.8776530762931439,
+  "side": 0.8888138512885261
+ },
+ "rows": [
+  {
+   "model": "LOD0 vs reference (front)",
+   "distance": "turnaround",
+   "px": 1024,
+   "iou": 0.8776530762931439,
+   "err": 12.234692370685604
+  },
+  {
+   "model": "LOD0 vs reference (side)",
+   "distance": "turnaround",
+   "px": 1024,
+   "iou": 0.8888138512885261,
+   "err": 11.11861487114739
+  },
+  {
+   "model": "LOD0",
+   "distance": "360 px tall",
+   "px": 360,
+   "iou": 0.9974964234620887,
+   "err": 4.148783977110158
+  },
+  {
+   "model": "LOD1",
+   "distance": "360 px tall",
+   "px": 360,
+   "iou": 0.9940229269815781,
+   "err": 7.150185110843481
+  },
+  {
+   "model": "LOD2",
+   "distance": "360 px tall",
+   "px": 360,
+   "iou": 0.8785720378742643,
+   "err": 40.97074127782991
+  },
+  {
+   "model": "LOD0",
+   "distance": "140 px tall",
+   "px": 140,
+   "iou": 0.9929577464788732,
+   "err": 10.475352112676056
+  },
+  {
+   "model": "LOD1",
+   "distance": "140 px tall",
+   "px": 140,
+   "iou": 0.9885931558935361,
+   "err": 12.606025153553672
+  },
+  {
+   "model": "LOD2",
+   "distance": "140 px tall",
+   "px": 140,
+   "iou": 0.8813273340832396,
+   "err": 42.91338582677165
+  },
+  {
+   "model": "LOD0",
+   "distance": "60 px tall",
+   "px": 60,
+   "iou": 0.9775280898876404,
+   "err": 22.792937399678973
+  },
+  {
+   "model": "LOD1",
+   "distance": "60 px tall",
+   "px": 60,
+   "iou": 0.9743589743589743,
+   "err": 23.878205128205128
+  },
+  {
+   "model": "LOD2",
+   "distance": "60 px tall",
+   "px": 60,
+   "iou": 0.869431643625192,
+   "err": 48.38709677419355
+  }
+ ]
+}

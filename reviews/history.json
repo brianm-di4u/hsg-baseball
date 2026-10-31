@@ -435,6 +435,60 @@
         "effortWeights": "S=1, M=2, L=4"
       },
       "date": "2026-10-31"
+    },
+    {
+      "loop": 8,
+      "scores": {
+        "characters": 5.5,
+        "charfit": 5.5,
+        "animation": 5.5,
+        "environment": 5.5,
+        "lighting": 6,
+        "ui": 6.5,
+        "readability": 6,
+        "mobile": 6
+      },
+      "total": 46.5,
+      "stalls": 1,
+      "verdict": "continue",
+      "critics": {
+        "critic-claude": {
+          "characters": 6,
+          "charfit": 5.5,
+          "animation": 6,
+          "environment": 6,
+          "lighting": 6.5,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6.5
+        },
+        "critic-codex": {
+          "characters": 5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 5,
+          "lighting": 5.5,
+          "ui": 7,
+          "readability": 6,
+          "mobile": 6
+        },
+        "advocate": {
+          "characters": 6,
+          "charfit": 5.5,
+          "animation": 6,
+          "environment": 5.5,
+          "lighting": 6.5,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6.5
+        }
+      },
+      "calibration": {
+        "perfGate": "pass: high desktop min 421.2 fps / p95 3.0 ms; medium phone proxy (4x CPU, single runs) min 62.8 fps, p95 33.7 ms (watch); est. phone GPU = worst medium-mobile median gpuMs 0.993 (grounder) x 25 = 24.8 ms <= 26 (narrow, up from 22.5); software GL 21.1/17.2 vs 19.9/15.1 baseline, better; heap 76.7/100.7/77.8 MB pass (low at 86%, watch); medium tris max 531k <= 650k; download not in perf.json",
+        "factRulings": "glove arm flexed at the hip (A wrong on straight-down) but static across all run crops and free palm flat (real); R09 ball visible (A wrong); R10 runner not readably in frame (B right); CF slab is a batter's eye, untextured (advocate right); R15 patches on the ground (advocate right); R05 front stance shoe hovers, rear near planted (5th loop, pose not shadow); R04 flash encloses ball (advocate right) but no load or stride in 1-4 (A overstated); R07 camera reframe 4-5 (advocate right); night faces modelled (advocate right), day brim face near black (real); shoulder fix visible in R16-1B/R12, pads persist in R03 front view; lettering outline helps HAMILTON but LAKESIDE K/E collide and SPRINGS I lost; mask join rings still visible after the loop-8 bar change",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
     }
   ]
 }

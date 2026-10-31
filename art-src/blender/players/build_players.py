@@ -255,15 +255,31 @@ def region_all(o, reg):
 
 
 def region_cleats(o):
-    """Athletic cleats from MakeHuman's shoe: a dark sole and a white stripe along each side on the black upper."""
+    """Athletic cleats from MakeHuman's shoe: a black upper on a near-black sole. Any colour edge cut across the coarse
+    shoe mesh comes out saw-toothed (a white side stripe, then a white sole edge, both did), so the two stay close."""
     me = o.data; zs = [v.co.z for v in me.vertices]; z0, z1 = min(zs), max(zs)
     regs = []
     for f in me.polygons:
         c, n = f.center, f.normal
         if n.z < -0.5 or c.z < z0 + 0.05 * (z1 - z0) / 0.5: regs.append(REG['dark'])  # the sole and its edge
-        elif abs(n.x) > 0.55 and z0 + 0.12 * (z1 - z0) < c.z < z0 + 0.32 * (z1 - z0): regs.append(REG['white'])  # side stripe
         else: regs.append(REG['shoe'])
     set_region(me, regs)
+
+
+def heel_to_foot(o, rig):
+    """MakeHuman's shoe hangs its heel on the calf bone: below the ankle, hand the calf's weight to the foot, so the
+    heel turns with the foot (it lifted off the dirt when the knee bent)."""
+    gi = {g.name: g for g in o.vertex_groups}
+    for s in ('l', 'r'):
+        calf, foot = gi.get(f'calf_{s}'), gi.get(f'foot_{s}') or o.vertex_groups.new(name=f'foot_{s}')
+        if not calf: continue
+        za = (rig.matrix_world @ rig.data.bones[f'foot_{s}'].head_local).z
+        for v in o.data.vertices:
+            if (o.matrix_world @ v.co).z > za + 0.02: continue
+            w = next((g.weight for g in v.groups if g.group == calf.index), 0.0)
+            if w <= 0: continue
+            fw = next((g.weight for g in v.groups if g.group == foot.index), 0.0)
+            calf.remove([v.index]); foot.add([v.index], fw + w, 'REPLACE')
 
 
 def region_eyes(o):
@@ -503,7 +519,7 @@ def make_decal(rig, body, name, front):
         for i in range(nx + 1):
             x = -w / 2 + w * i / nx; z = o.z + up - h / 2 + h * j / nz
             hit = bvh.ray_cast(Vector((x, o.y + dy * 3, z)), Vector((0, -dy, 0)))
-            p = (hit[0] + hit[1] * 0.045) if hit[0] else Vector((x, o.y + dy * 0.5, z))
+            p = (hit[0] + hit[1] * 0.02) if hit[0] else Vector((x, o.y + dy * 0.5, z))
             row.append(bm.verts.new(p)); uv.append((i / nx if front else 1 - i / nx, j / nz))
         grid.append(row)
     for j in range(nz):
@@ -681,7 +697,7 @@ for vname in args.variants.split(','):
     BONES.clear(); BONES.update(b.name for b in rig.data.bones)
     for o in extras:
         n = o.name.lower()
-        if 'shoes' in n: region_cleats(o)
+        if 'shoes' in n: region_cleats(o); heel_to_foot(o, rig)
         elif 'short02' in n or 'eyebrow' in n or 'hair' in n: region_all(o, REG['hair'])
         elif 'eye' in n: region_eyes(o)
         else: region_all(o, REG['skin'])
