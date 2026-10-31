@@ -453,7 +453,7 @@ def make_decal(rig, body, name, front):
     kd.balance()
     o = bone_pos(rig, 'spine_03')
     w, h, up = (0.92, 0.26, 0.5) if front else (0.85, 0.85, 0.4)  # across the chest only (wider wraps onto the flanks)
-    nx, nz = 36, 10 if front else 20
+    nx, nz = 28, 8 if front else 14  # dense enough to follow the chest, light enough for the phone pack
     dy = -1 if front else 1
     bm = bmesh.new(); grid = []; uv = []
     for j in range(nz + 1):
@@ -618,7 +618,7 @@ def skin_maps():
         im.pixels = px
         for size in (2048, 1024):
             im2 = im.copy(); im2.scale(size, size)
-            sc = bpy.context.scene; sc.render.image_settings.file_format = 'WEBP'; sc.render.image_settings.quality = 82
+            sc = bpy.context.scene; sc.render.image_settings.file_format = 'WEBP'; sc.render.image_settings.quality = 82 if size > 1024 else 72  # the phone pack is size-capped
             im2.save_render(os.path.join(OUT, f'skin-{key}-{size}.webp'), scene=sc)
         out[key] = mean
     # cloth detail: Poly Haven's cotton_jersey normal map (CC0), at 512², tiled over the uniform by the game

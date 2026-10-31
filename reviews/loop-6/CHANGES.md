@@ -12,3 +12,6 @@
 - **Headwear shadows:** caps and helmets no longer cast sun or tower shadows: a custom shadow-depth material discards those regions. A brim's shadow had blacked out the face under it; the headwear itself is still lit and visible.
 - **Batting helmet ear flaps** continue the shell down over each ear in three rows, curving in under the cheekbone (were flat cards).
 - **Low tier** (software GL, slow devices) keeps the plain cone-and-ball trees. The tiered trees cost software GL about 3 fps (loop-5 perf gate).
+
+## After the captures (not in this loop's images)
+- **Phone pack size:** the medium pack had grown to 4.04 MB, over its 4 MB budget (the loop-5 commit went in with that test failing). Jersey decal grids are coarser (28 × 8 front, 28 × 14 back; were 36 × 10 and 36 × 20) and the 1024² skin maps are saved at WebP quality 72 (was 82). Medium pack is now 3.63 MB, high 8.27 MB; the perf test passes.
