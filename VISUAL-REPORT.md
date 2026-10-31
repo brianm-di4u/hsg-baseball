@@ -261,3 +261,123 @@ inferred or typical of the era. Facts worth adding to the shared `research/`:
   - Bake IK in Blender (`nla.bake` with visual keying) to author precise bat and hand poses.
   - Scale accessory bones to zero to hide parts in both color and shadow passes.
   - Merge static meshes by material at park build time.
+
+---
+
+# Visuals v3: players (character campaign)
+
+A looping campaign of development, adversarial review and refinement, focused on the players. The plan is `VISUAL-PLAN-3.md`; every loop's evidence is in `reviews/loop-N/`, with the score history in `reviews/HISTORY.md`.
+
+**How each loop ran:**
+1. GPU captures of 17 moments: three tiers, desktop, portrait and landscape, character close-ups and 8-frame motion strips (`tools/shots-review.mjs`, determinism-checked).
+2. Performance (`tools/perf-review.mjs`) and character fidelity (`tools/fidelity.mjs`).
+3. Two blind critics: Critic A, a Claude subagent, and Critic B, Codex (GPT-6.1 Sol).
+4. An advocate, then a judge, with a blind benchmark calibration frame every third loop.
+5. `tools/review-tally.mjs`, then the next loop's work, then a commit.
+
+Loops 0–10 ran. The campaign stopped on its stagnation rule: loops 8, 9 and 10 each scored 46.5 with no category up by 0.5.
+
+## Result
+| Loop | characters | charfit | animation | environment | lighting | ui | readability | mobile | Total /80 |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 (v2 baseline) | 3.0 | 3.0 | 4.0 | 4.5 | 5.0 | 6.0 | 5.5 | 5.5 | 36.5 |
+| 1 | 5.0 | 5.5 | 5.0 | 5.0 | 5.0 | 6.0 | 5.5 | 6.0 | 43.0 |
+| 2 | 4.5 | 5.0 | 5.0 | 5.5 | 5.5 | 6.0 | 6.0 | 6.0 | 43.5 |
+| 3 | 5.0 | 5.5 | 5.0 | 5.0 | 5.5 | 6.0 | 6.0 | 6.0 | 44.0 |
+| 4 | 5.5 | 5.5 | 5.5 | 5.5 | 6.0 | 6.0 | 6.0 | 6.0 | 46.0 |
+| 5 | 5.0 | 5.5 | 5.0 | 5.5 | 5.5 | 6.0 | 6.0 | 6.0 | 44.5 |
+| 6 | 5.5 | 5.5 | 5.0 | 5.5 | 6.0 | 6.5 | 6.0 | 6.0 | 46.0 |
+| 7 | 5.5 | 5.5 | 5.5 | 5.5 | 6.0 | 6.5 | 6.0 | 6.0 | 46.5 |
+| 8 | 5.5 | 5.5 | 5.5 | 5.5 | 6.0 | 6.5 | 6.0 | 6.0 | 46.5 |
+| 9 | 5.5 | 5.5 | 5.5 | 5.5 | 6.0 | 6.5 | 6.0 | 6.0 | 46.5 |
+| 10 | 5.5 | 5.5 | 5.5 | 5.5 | 6.0 | 6.5 | 6.0 | 6.0 | 46.5 |
+| Gate | 7.5 | 7 | 7 | 7 | 7 | 7 | 7 | 7 | — |
+
+**+10 points, but no category reached its gate.**
+
+| Category | v2 baseline | Final |
+|---|---|---|
+| Characters | 3 | 5.5 |
+| Charfit | 3 | 5.5 |
+| Animation | 4 | 5.5 |
+| Environment | 4.5 | 5.5 |
+| Lighting | 5 | 6 |
+
+The big step was loop 1, the switch to the v3 bodies. After loop 4, gains came half a point at a time.
+
+The judge's blind calibration frames (SMB3/SMB4 stills) scored 7.5 and 7.0–7.5 on characters and lighting in loops 3, 6 and 9. The scale didn't drift.
+
+Before/after sheets, loop 0 against loop 10 (both git-ignored):
+- every moment, built by `shared/test-harness/sheets.mjs . --milestone review-loop-10/high --compare review-loop-0/high`: `screenshots/review-loop-10/high/before-after/`
+- character close-ups: `screenshots/review-loop-10/crops/before-after/`
+
+## What shipped
+- **Players:** three CC0 MakeHuman/MPFB2 builds (lean, average, stocky).
+  - Rig: the 53-bone game-engine rig plus 8 accessory bones.
+  - Detail levels: 28k / 9k / 2.6k triangles, picked by on-screen height.
+  - Built headless and reproducibly by `art-src/blender/players/build_players.py`.
+  - Packs: lazy-loaded per tier. `assets/players-medium.js` is 3.56 MB (budget 4) and `assets/players-high.js` is 8.15 MB (budget 10). The eager download is unchanged.
+- **Uniform:** cut lines for the belt, hems, collar band, cuffs and placket piping. Cloth is relaxed and inflated over the body.
+- **Decals:** lettering and the number are skinned onto the jersey, with a buttoned placket on the high tier.
+- **Headwear and gear:** cap, batting helmet with an ear shell, catcher's and umpire's gear, glove and bat.
+- **Skin and eyes:** per-tone skin detail maps, eyes, and a palette shader (team colours as region uniforms, one draw call per player).
+- **Motion:** CMU motion capture for the pitch, swing, stance, throw and run, time-warped to the game's release and contact frames.
+- **Runtime posing:**
+  - foot grounding and foot-plant IK on standing clips;
+  - the mocap's clavicle shrug damped;
+  - two-bone arm IK for the bat grip and glove reach;
+  - finger curl;
+  - the ball drawn in the glove or throwing hand while held;
+  - the stride on every pitch, then the swing at clip speed through its follow-through.
+- **Grounding and environment:** contact shadows under each sole; whole-board sponsor boards; night lighting and tree work.
+- **Tooling:** the whole review loop above.
+  - GPU and software-GL timings are medians.
+  - Measurements wait for, and retry around, other projects' GPU jobs on this machine.
+  - `research/perf-ceiling.md` measured the player complexity ceiling per device profile.
+
+## Performance (final build, quiet GPU; `reviews/post-campaign/perf.json`)
+| Profile | Budget | v2 baseline (loop 0) | Final |
+|---|---|---|---|
+| Desktop, high, RTX 5060 | ≥ 55 fps, p95 ≤ 22 ms | 715 fps | 351 fps min, p95 3.8 ms |
+| Phone proxy: medium, 4× CPU throttle | ≥ 30 fps (floor 24) | 103 fps | 64 fps min, p95 32.8 ms |
+| Phone GPU estimate (medium · mobile GPU ms × 25) | ≤ 26 ms | 19.1 ms | 21.5 ms (worst scene 0.861 ms) |
+| Software GL, low | no worse than baseline | 19.9 / 15.1 fps | 20.8 / 17.1 fps |
+| Heap, high / medium / low | < 192 / 128 / 90 MB | 31 / 36 / 36 MB | 113 / 73 / 75 MB |
+
+**Complexity budget** (measured in phase 2; `research/perf-ceiling.md`): triangles barely cost the desktop or phone GPU. The phone estimate is fill-rate bound, and software GL is triangle bound.
+
+| Tier | LOD0 | LOD1 | LOD2 | Skin map | Pack | Scene cap |
+|---|---|---|---|---|---|---|
+| high | 28k | 9k | 2.6k | 2048² | ≤ 10 MB | 1.6 M tris |
+| medium | — | 9k | 2.6k | 1024² | ≤ 4 MB | 650k tris |
+| low | — | — | — | v2 player | eager | — |
+
+**Performance caveats:**
+- **Shared GPU.** Other projects ran GPU jobs on this machine throughout loops 7–10. Two loops' first runs were contaminated, and loop 10's gate is a provisional pass on a duel-normalised estimate.
+- **Portrait framing.** A wider portrait field camera (to keep the corner bases in frame) measured about 30% more phone GPU time, so it was reverted. Portrait framing stays a gap.
+- **No real phone.** No physical phone was measured. The phone figures are a CPU throttle plus a GPU ratio.
+
+## Remaining gaps (loop-10 judge, ranked)
+1. **Pitch release sync.** The ball leaves before the throwing arm comes through (R06, R03 frame 7).
+2. **Colour-region edges.** Collar, sleeve and sock-top edges are per-triangle and jagged; lettering crosses the piping.
+3. **Landscape framing.** The batting camera crops the feet, and the buttons crowd the pitcher.
+4. **Flat cloth.** No folds or seams (a baked fold/AO normal map is the fix).
+5. **Faces under headwear.** No brows or hair; skin albedo is weak.
+6. **Gear construction.** Cleats have no laces or plate. The glove has no web or pocket. The catcher's mitt and pads aren't segmented.
+7. **Set and stance hands.**
+8. **Far LOD switch.** The switch from LOD1 to LOD2 on high desktop (around 70 px) is too early.
+9. **Run-to-field transitions.** Also the trot arm swing.
+10. **Cap silhouette and shoulder bulk.**
+11. **Crowd.** It's a photo card; instanced fans and textured stands would replace it.
+12. **Field camera framing.** Runner and fielder margins.
+
+## After the campaign
+**Fixes made after the last review, not seen by any critic** (`reviews/post-campaign/CHANGES.md`, commit `91e7bc8`):
+- A mirrored-number bug on left-handed players.
+- Lettering under the catcher's chest protector on the low tier.
+- Buttons limited to the high tier.
+- Larger irises.
+- Skin self-light scaled by skin tone.
+- The pitch strip covering release.
+
+The final perf table above was measured on that build.
