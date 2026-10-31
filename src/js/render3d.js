@@ -83,7 +83,7 @@ export async function init3d(stage, onReady, art = []) {
     R3.ballShadow.rotation.x = -Math.PI / 2; R3.scene.add(R3.ballShadow);
     // contact shadows: a soft dark spot under each foot (two per actor, one instanced draw), shrinking as a foot lifts
     const cg = new T.PlaneGeometry(1, 1); cg.rotateX(-Math.PI / 2);
-    R3.contact = new T.InstancedMesh(cg, new T.MeshBasicMaterial({ map: R3.ballShadow.material.map, color: '#000000', transparent: true, opacity: 0.55, depthWrite: false, fog: false }), 32);
+    R3.contact = new T.InstancedMesh(cg, new T.MeshBasicMaterial({ map: R3.ballShadow.material.map, color: '#000000', transparent: true, opacity: 0.72, depthWrite: false, fog: false }), 32);
     R3.contact.frustumCulled = false; R3.contact.renderOrder = 1; R3.scene.add(R3.contact);
     const N = 28, tg = new T.BufferGeometry();
     tg.setAttribute('position', new T.Float32BufferAttribute(new Float32Array(N * 2 * 3), 3));
@@ -160,7 +160,7 @@ function contactPass() {
       const b = a.bones[ank] || a.bones[v2], t = a.bones[toe];
       if (!b) continue;
       p.setFromMatrixPosition(b.matrixWorld); if (t) { q.setFromMatrixPosition(t.matrixWorld); p.add(q).multiplyScalar(0.5); }
-      const lift = Math.max(0, p.y - g.y - 0.2), s = Math.max(0, 1.3 - lift * 0.9);
+      const lift = Math.max(0, p.y - g.y - 0.2), s = Math.max(0, 1.5 - lift * 0.9);
       if (s <= 0.05) continue;
       m.compose(at.set(p.x, g.y + 0.06, p.z), one, sc.set(s, 1, s * 1.5));
       R3.contact.setMatrixAt(n++, m);

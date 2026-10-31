@@ -39,9 +39,9 @@ os.makedirs(OUT, exist_ok=True)
 
 # body builds: MPFB phenotype (0..1). High-school varsity: young adults, athletic.
 VARIANTS = {
-    'lean': dict(age=0.45, muscle=0.62, weight=0.42, height=0.68, proportions=0.85),  # ≈ 6 ft 3
+    'lean': dict(age=0.44, muscle=0.55, weight=0.3, height=0.74, proportions=0.9),  # ≈ 6 ft 4, rangy
     'average': dict(age=0.46, muscle=0.75, weight=0.55, height=0.62, proportions=0.8),  # ≈ 6 ft 0
-    'stocky': dict(age=0.5, muscle=0.85, weight=0.92, height=0.52, proportions=0.65),  # ≈ 5 ft 8, heavy
+    'stocky': dict(age=0.52, muscle=0.9, weight=1.0, height=0.48, proportions=0.6),  # ≈ 5 ft 8, heavy-set
 }
 
 addon_utils.enable('bl_ext.user_default.mpfb', default_set=True, persistent=True)
@@ -125,6 +125,7 @@ def dress_body(rig, body):
     z_ankle = bone_pos(rig, 'foot_l').z
     z_pants = z_knee - 0.38 * (z_knee - z_ankle)  # high-cut pants, stirrup socks below
     z_collar = bone_pos(rig, 'neck_01').z - 0.02  # the jersey's neckline (the plane tilts it lower in front)
+    z_scalp = max((body.matrix_world @ v.co).z for v in me.vertices) - 0.3  # under a cap's band
     sh_l, el_l = bone_pos(rig, 'upperarm_l'), bone_pos(rig, 'lowerarm_l')
     # cut the hems as straight lines first (the base mesh's rows don't follow the belt or the sleeves)
     bm = bmesh.new(); bm.from_mesh(me)
@@ -154,6 +155,8 @@ def dress_body(rig, body):
     for x in (-0.075, -0.045, 0.045, 0.075): cut(front, Vector((x, 0, 0)), Vector((1, 0, 0)))
     for side, sx in (('l', 1), ('r', -1)):
         sh, el = Vector((sh_l.x * sx, sh_l.y, sh_l.z)), Vector((el_l.x * sx, el_l.y, el_l.z))
+        hd = Vector((bone_pos(rig, 'hand_l').x * sx, bone_pos(rig, 'hand_l').y, bone_pos(rig, 'hand_l').z)); lo = Vector((el_l.x * sx, el_l.y, el_l.z))
+        cut(lambda f, s=side: fbone(f) in (f'lowerarm_{s}', f'hand_{s}'), hd, (hd - lo).normalized())  # the undershirt ends at a straight wrist line
         for t0 in (0.5, 0.43):  # the sleeve hem, and the top of the cuff band
             cut(lambda f, s=side: fbone(f) == f'upperarm_{s}', sh + (el - sh) * t0, (el - sh).normalized())
     bm.to_mesh(me); bm.free()
@@ -171,8 +174,12 @@ def dress_body(rig, body):
             h = (c - Vector((0, 0, z_collar))).dot(Vector((0, -0.35, 1)).normalized())
             if h > -0.08: regs.append(REG['skin'] if h > 0 else REG['trim']); continue  # skin above, the collar band
             if b == 'neck_01': regs.append(REG['jersey']); continue  # below the band: cloth (other bones: the torso rules)
+        if b == 'head' and c.z > z_scalp: regs.append(REG['hair']); continue  # the scalp: hidden under headwear, a close crop bareheaded
         if b.startswith(('hand', 'index', 'middle', 'ring', 'pinky', 'thumb')) or b in DEFORM_SKIN: regs.append(REG['skin']); continue
-        if b.startswith('lowerarm'): regs.append(REG['under']); continue
+        if b.startswith('lowerarm') or b.startswith('hand'):
+            sx = 1 if b.endswith('_l') else -1
+            hd = Vector((bone_pos(rig, 'hand_l').x * sx, bone_pos(rig, 'hand_l').y, bone_pos(rig, 'hand_l').z)); lo = Vector((el_l.x * sx, el_l.y, el_l.z))
+            regs.append(REG['under'] if (c - hd).dot((hd - lo).normalized()) < 0 else REG['skin']); continue
         if b.startswith('upperarm'):
             sh, el = (sh_l, el_l) if b.endswith('_l') else (Vector((-sh_l.x, sh_l.y, sh_l.z)), Vector((-el_l.x, el_l.y, el_l.z)))
             t = (c - sh).dot((el - sh).normalized()) / (el - sh).length
@@ -395,18 +402,33 @@ def make_bat(rig):
 
 
 def make_glove(rig, body):
-    """A fielder's mitt: the convex hull of the left hand, pushed out a little and rounded (a hull has no stray normals,
-    so no spikes), rigid on the glove bone."""
+    """A fielder's glove shaped on the open left hand: the palm and each finger become their own padded shells (the finger
+    stalls, the pinky and ring sharing one as on a real glove), a leather web spans thumb and index, and everything is
+    rigid on the glove bone with the closed hand inside."""
     me = body.data
-    left = [v.co.copy() for v in me.vertices if dominant(body, v).endswith('_l') and dominant(body, v).startswith(('hand', 'index', 'middle', 'ring', 'pinky', 'thumb'))]
+    groups = {'palm': ('hand_l',), 'thumb': ('thumb_01_l', 'thumb_02_l', 'thumb_03_l'), 'index': ('index_01_l', 'index_02_l', 'index_03_l'),
+              'middle': ('middle_01_l', 'middle_02_l', 'middle_03_l'), 'ringpinky': ('ring_01_l', 'ring_02_l', 'ring_03_l', 'pinky_01_l', 'pinky_02_l', 'pinky_03_l')}
+    dom = {v.index: dominant(body, v) for v in me.vertices}
     bm = bmesh.new()
-    for co in left: bm.verts.new(co)
-    bmesh.ops.convex_hull(bm, input=bm.verts[:])
-    c = sum((v.co for v in bm.verts), Vector()) / len(bm.verts)
-    for v in bm.verts: v.co = c + (v.co - c) * 1.18 + (v.co - c).normalized() * 0.07  # roomy: the closed hand sits inside
-    bmesh.ops.triangulate(bm, faces=bm.faces[:])
-    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=1, use_grid_fill=True)
-    for _ in range(3): bmesh.ops.smooth_vert(bm, verts=bm.verts, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+    for name, bones in groups.items():
+        pts = [me.vertices[i].co.copy() for i, b in dom.items() if b in bones]
+        if len(pts) < 4: continue
+        sub = bmesh.new()
+        for co in pts: sub.verts.new(co)
+        bmesh.ops.convex_hull(sub, input=sub.verts[:])
+        c = sum((v.co for v in sub.verts), Vector()) / len(sub.verts)
+        grow = 0.09 if name == 'palm' else 0.06
+        for v in sub.verts: v.co = c + (v.co - c) * 1.15 + (v.co - c).normalized() * grow
+        bmesh.ops.subdivide_edges(sub, edges=sub.edges[:], cuts=1, use_grid_fill=True)
+        for _ in range(3): bmesh.ops.smooth_vert(sub, verts=sub.verts, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+        tmp = bpy.data.meshes.new('gtmp'); sub.to_mesh(tmp); sub.free(); bm.from_mesh(tmp); bpy.data.meshes.remove(tmp)
+    # the web: a padded sheet from the thumb tip to the index base and tip
+    tip = lambda b: rig.matrix_world.inverted() @ bone_pos(rig, b, tail=True)
+    head = lambda b: rig.matrix_world.inverted() @ bone_pos(rig, b)
+    w = [tip('thumb_03_l'), head('index_01_l'), tip('index_02_l'), head('thumb_02_l')]
+    vs = [bm.verts.new(p) for p in w]
+    web = bm.faces.new(vs)
+    bmesh.ops.solidify(bm, geom=[web], thickness=0.05)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     o = new_obj('glove', bm); region_all(o, REG['glove']); rigid(o, rig, 'glove')
     return o

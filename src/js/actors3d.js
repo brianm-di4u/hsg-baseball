@@ -203,7 +203,8 @@ export function pose(actor, name, t, name2 = null, t2 = 0, w2 = 0) {
   if (name2) set(name2, t2, w2);
   actor.mixer.update(0);
   const loose = name === 'run' ? 0.7 : 0.25; // a runner's hands close to loose fists
-  if (actor.v3) curlFingers(actor, actor.show.has('bat') || actor.show.has('glove') ? 1 : loose, actor.show.has('bat') ? 1 : loose); // the gloved hand closes inside the mitt
+  // bat hands grip; the gloved hand stays open, each finger inside its stall (the glove is shaped on the open hand)
+  if (actor.v3) curlFingers(actor, actor.show.has('bat') ? 1 : actor.show.has('glove') ? 0 : loose, actor.show.has('bat') ? 1 : loose);
   ground(actor, !FLIGHT.has(name));
   for (const n of ACC) { const b = actor.bones[bn(n)]; if (b) { const s = actor.show.has(n) ? 1 : 0.0001; b.scale.set(s, s, s); } }
   // hair stays under a cap or helmet (v3 hair is real geometry and would poke through)

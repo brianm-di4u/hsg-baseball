@@ -217,6 +217,60 @@
         "effortWeights": "S=1, M=2, L=4"
       },
       "date": "2026-10-31"
+    },
+    {
+      "loop": 4,
+      "scores": {
+        "characters": 5.5,
+        "charfit": 5.5,
+        "animation": 5.5,
+        "environment": 5.5,
+        "lighting": 6,
+        "ui": 6,
+        "readability": 6,
+        "mobile": 6
+      },
+      "total": 46,
+      "stalls": 0,
+      "verdict": "continue",
+      "critics": {
+        "critic-claude": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 5.5,
+          "lighting": 5.5,
+          "ui": 6,
+          "readability": 6,
+          "mobile": 6
+        },
+        "critic-codex": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 5,
+          "environment": 5,
+          "lighting": 5.5,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6
+        },
+        "advocate": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 5.5,
+          "environment": 5.5,
+          "lighting": 6,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6
+        }
+      },
+      "calibration": {
+        "perfGate": "pass: high desktop min 550.7 fps / p95 2.5 ms; medium phone proxy min 62.3 fps (p95 32.4 ms, watch); est. phone GPU 0.574 ms x 25 = 14.4 ms <= 26; software GL 19.5/16.5 vs 19.9/15.1 baseline, within noise; heap 78/72.3/75.9 MB pass; download not in perf.json",
+        "factRulings": "R04 small coil, no stride (A partly wrong); R07 frame 7 reach key exists (A wrong), 4-5 is camera reframe (B overread), ball never in glove (real); R12 sky graded (A wrong); R13 fielders lit (A wrong); mobile R07 both corner bags off-frame (advocate wrong, B right); helmeted dark-skin faces lose eyes, lips/chin visible (A overstated); R05 feet hover is pose not shadow (advocate right); reticle by design (advocate right); cap skin, glove poke-through, garbled/floating lettering, board overlap real; low R02 batter differs from high (tier drift)",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
     }
   ]
 }

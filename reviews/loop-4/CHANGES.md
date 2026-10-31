@@ -7,3 +7,7 @@
 - **Cleats:** the MakeHuman shoes are recoloured as athletic cleats: a dark sole and edge, and a white stripe along each side of the black upper.
 - **Glove:** the mitt is roomier (hull ×1.18 plus 0.07 ft), and the gloved left hand closes fully inside it. Before, no curl reached the left hand, so fingertips poked through.
 - **Caps and helmets:** about 0.03 ft more clearance over the scalp, so no skin shows through the crown.
+
+## Environment
+- **Sponsor boards** (fictional local businesses) line the stand front behind home and the curved backstop wall beside it. Modern parks have painted boards; the old park has cream boards with serif lettering.
+- **Crowd strip:** each stand section starts the painted crowd strip at a different offset, so the repeat seams no longer line up.

@@ -72,7 +72,11 @@ button { font: inherit; color: inherit; }
 .pb.on { transform: translateY(3px); box-shadow: 0 1px 0 #8A8590; background: #FFD84D; }
 .pb[disabled] { opacity: .45; cursor: not-allowed; }
 @media (pointer: coarse) { #pad { min-height: 96px; } .pb { height: 64px; min-width: 70px; } .pb.big { height: 72px; min-width: 130px; } }
-@media (orientation: landscape) and (max-height: 520px) { #pad { min-height: 64px; padding: 4px 10px; } .pb, .pb.big { height: 50px; } .sb-info { display: none; } }
+/* phone landscape: the pad floats over the bottom of the field view, so the 3D view gets ~90% of the height */
+@media (orientation: landscape) and (max-height: 520px) {
+  #pad { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; min-height: 0; padding: 4px 10px calc(4px + env(safe-area-inset-bottom)); background: linear-gradient(rgba(20, 18, 30, 0), rgba(20, 18, 30, .6)); border-top: 0; }
+  .pb, .pb.big { height: 46px; } .sb-info { display: none; }
+}
 
 /* ---------- screens ---------- */
 #screen { position: fixed; inset: 0; z-index: 10; overflow-y: auto; overflow-x: hidden; background: var(--scrim); display: flex; justify-content: center; align-items: flex-start; padding: 24px 16px 40px; }

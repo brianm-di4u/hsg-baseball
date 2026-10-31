@@ -1,0 +1,200 @@
+[
+  {
+    "id": "G-cap-crown-skin",
+    "category": "characters",
+    "expectedGain": 0.4,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher-back",
+      "crops/high/R14-batter",
+      "high/desktop/R14"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Delete or alpha-mask the scalp faces inside each headwear type's footprint (cap, umpire cap, helmet) via a per-headwear vertex-group mask at LOD0-LOD2. Test: zero skin-hue pixels inside the cap silhouette in R17-pitcher-back and R14-batter.",
+    "priority": 0.75,
+    "selected": true
+  },
+  {
+    "id": "G-jersey-lettering",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R02-batter_hands",
+      "crops/high/R17-pitcher-back"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Render the chest wordmark from a UV-space texture on the jersey surface (no separate projected mesh), with a gap at the placket so piping never crosses letters, and add a back-number decal. Test: intact LAKE HAMILTON, no letter outside the torso silhouette in R02-batter_hands, readable back number in R17-pitcher-back.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-feet-grounding",
+    "category": "animation",
+    "expectedGain": 0.3,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R05-batter_feet",
+      "strips/high/R04"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Pin the soles to ground height in stance and support phases with two-bone foot IK, or correct the clip's root height. Not shadow bias. Test: 0 px gap between sole and dirt in R05-batter_feet.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-glove-model",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R09-LF",
+      "crops/high/R06-catcher_glove"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Replace the hull with a mitt mesh that has a cupped pocket, laced web, four finger stalls and a heel, plus a leather normal and roughness map and a distinct catcher's mitt; shrink the fingers inside the glove or hide them. Test: web and pocket readable and no skin pixels on the glove exterior in R17-pitcher_hands.",
+    "priority": 0.469,
+    "selected": true
+  },
+  {
+    "id": "G-cloth-folds-chest",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R14-batter",
+      "crops/high/R05-batter_feet"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Bake fold normal maps for elbow, armpit, belt blouse, knee and hem, raise the cotton detail normal until it is visible at 2x crop, flatten the chest shape key under the jersey, and round the shoulder caps. Test: folds visible at elbows and knees, flat chest profile in R17-pitcher_hands.",
+    "priority": 0.469,
+    "selected": true
+  },
+  {
+    "id": "G-fielding-catch",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R07",
+      "crops/high/R09-LF"
+    ],
+    "benchmark": "smb4-5",
+    "fix": "IK the glove pocket to the predicted ball position over the last 0.3 s before the catch tick, then add transfer and throw beats; replace the tray carry with an upright glove carry in the run. Test: ball within 0.2 ft of the pocket on the catch frame of strips/R07.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-mobile-framing",
+    "category": "mobile",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS7",
+    "evidence": [
+      "high/landscape/R05",
+      "high/mobile/R07",
+      "high/desktop/R10"
+    ],
+    "fix": "Cut the landscape shelf to a 56 px overlay row, keep the pitcher/batter and pitch-speed line, hide the shelf on fielding views, and move the portrait in-play camera target so both corner bags are framed. Test: 3D view >= 75% of landscape height; first and third base visible in mobile R07; the pitcher's feet visible in landscape R05.",
+    "priority": 0.45,
+    "selected": true
+  },
+  {
+    "id": "G-region-sawtooth",
+    "category": "characters",
+    "expectedGain": 0.4,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R02-batter_hands",
+      "crops/high/R05-batter_feet"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Drive collar, sleeve, sock, belt, placket piping and cleat-stripe regions from an anti-aliased, mipmapped UV mask, not per-face colour, and make the piping straight. Test: no stair step longer than 2 px on any trim edge in the 2x crops.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-face-fill",
+    "category": "characters",
+    "expectedGain": 0.4,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS3",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R02-batter_hands",
+      "high/mobile/R02"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Add a low-intensity per-batter fill under the brim (or a hemisphere fill term in the face shader), clamp helmet occlusion on the face, and set a minimum skin albedo, plus a warm subsurface tint, for dark skin. Test: eyes and brow readable in R02-batter_head; mean face luminance >= 0.2.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-body-variety",
+    "category": "characters",
+    "expectedGain": 0.4,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R14-batter",
+      "crops/high/R07-SS",
+      "crops/high/R16-1B"
+    ],
+    "benchmark": "smb4-4",
+    "fix": "Ship three MakeHuman build presets (stocky, lean or tall, average) as shape keys, assigned by roster. Test: three visibly different silhouettes across the close-ups.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-swing-stride-trot",
+    "category": "animation",
+    "expectedGain": 0.4,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R04",
+      "strips/high/R10"
+    ],
+    "benchmark": "smb4-3",
+    "fix": "Key a front-foot stride or toe tap starting at pitcher release, add two in-between keys between launch and contact, and give the trot alternating arm swing. Test: front foot lifts within R04 frames 1-4; arms alternate across R10.",
+    "priority": 0.375,
+    "selected": false
+  },
+  {
+    "id": "G-board-overlap",
+    "category": "environment",
+    "expectedGain": 0.2,
+    "severity": 2,
+    "effort": "S",
+    "workstream": "WS4",
+    "evidence": [
+      "crops/high/R02-batter_hands",
+      "crops/high/R17-pitcher-back"
+    ],
+    "fix": "Lay out the sponsor boards along the wall with no overlaps, and sink the pitching rubber flush with the mound top. Test: every board name is complete in R02-batter_hands and R17-pitcher-back; the rubber's top is at mound height.",
+    "priority": 0.3,
+    "selected": false
+  }
+]

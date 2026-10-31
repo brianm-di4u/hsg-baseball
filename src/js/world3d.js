@@ -167,6 +167,24 @@ function boundary(park) {
   return { foul: pts, pole };
 }
 
+// Six boards, each about 12 ft wide, across one 72 ft tile (canvas 2048 × 100).
+const SPONSORS = [['REDBIRD FEED & SEED', '#7A1E1E', '#F4E9D0'], ['TWIN OAKS HARDWARE', '#1F3A5F', '#FFFFFF'], ['RIDGELINE PIZZA', '#F2B705', '#1B1B1B'],
+  ['VALLEY TIRE & LUBE', '#1B1B1B', '#F2B705'], ['MAGNET COVE MOTORS', '#F4F1EA', '#8E2F1F'], ['GATOR FARM ICE CREAM', '#2E6A3C', '#FFFFFF']];
+function sponsorTex(old) {
+  const k = `sponsors|${old ? 1 : 0}`;
+  if (W3.tex[k]) return W3.tex[k];
+  const W = 2048, H = 100, c = canvas(W, H), x = c.getContext('2d'), w = W / SPONSORS.length;
+  SPONSORS.forEach(([name, bg, fg], i) => {
+    x.fillStyle = old ? '#E9DFC6' : bg; x.fillRect(i * w, 0, w, H);
+    x.strokeStyle = old ? '#5A4630' : 'rgba(255,255,255,0.35)'; x.lineWidth = 4; x.strokeRect(i * w + 6, 6, w - 12, H - 12);
+    let fs = 44; const font = (n) => (old ? `700 ${n}px Georgia, serif` : `900 ${n}px "Arial Black", Impact, sans-serif`);
+    x.font = font(fs); while (x.measureText(name).width > w - 40 && fs > 18) { fs -= 2; x.font = font(fs); }
+    x.fillStyle = old ? '#5A4630' : fg; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(name, i * w + w / 2, H / 2 + 2);
+    x.fillStyle = '#111'; x.fillRect((i + 1) * w - 3, 0, 6, H); // the gap between boards
+  });
+  return (W3.tex[k] = texFrom(c, 1));
+}
+
 // ---------------------------------------------------------------- walls
 function wallRibbon(points, heights, mat, uScale = 8) {
   const pos = [], uv = [], idx = [];
@@ -249,7 +267,8 @@ function seating(group, a, b, rows, L, o = {}) {
   const cm = crowdMat(L);
   // the painted strip shows about six rows of fans; one tile covers ~36 ft and three rows, so a fan is about life-size
   // next to the players (at twice that, the crowd behind home loomed over the batter in the pitching camera)
-  if (cm.map) { cm.map.repeat.set(Math.max(1, Math.round(len / 36)), Math.max(1, Math.round(rows / 3))); cm.map.wrapT = T.RepeatWrapping; }
+  if (cm.map) { cm.map.repeat.set(Math.max(1, Math.round(len / 36)), Math.max(1, Math.round(rows / 3))); cm.map.wrapT = T.RepeatWrapping;
+    cm.map.offset.set(((Math.abs(a[0] * 7.31 + a[1] * 3.17) % 1)), (Math.abs(a[0] * 1.7 + b[1] * 2.9) % 1)); } // each section starts the strip elsewhere: no aligned seams
   const slope = Math.hypot(D, rows * rise);
   const crowd = new T.Mesh(new T.PlaneGeometry(len, slope), cm);
   crowd.position.set(len / 2, base + rows * rise / 2 + 1.4, D / 2);
@@ -263,6 +282,11 @@ function seating(group, a, b, rows, L, o = {}) {
       const ph = H + 9 + (dz > 1 ? 1 : 0); const post = box(0.7, ph, 0.7, postM); post.position.set(s, ph / 2, dz); post.castShadow = true; holder.add(post);
     }
     if (L.wood) { const fas = box(len + 4, 2.4, 0.4, std('#E9DFC6')); fas.position.set(len / 2, H + 8.6, -2.6); holder.add(fas); }
+  }
+  if (o.signs) { // sponsor boards along the front wall, facing the field
+    const t = sponsorTex(L.wood).clone(); t.needsUpdate = true; t.repeat.set(len / 72, 1);
+    const sb = new T.Mesh(new T.PlaneGeometry(len, Math.min(3.4, base - 0.3)), new T.MeshStandardMaterial({ map: t, roughness: 0.75 }));
+    sb.position.set(len / 2, Math.min(3.4, base - 0.3) / 2 + 0.15, -0.06); sb.rotation.y = Math.PI; holder.add(sb);
   }
   if (o.box) {
     const w = Math.min(40, len * 0.5);
@@ -421,10 +445,34 @@ export function drawScoreboard(sb, st) {
 }
 
 // ---------------------------------------------------------------- trees, ridges, sky
+// Tree shapes for the instanced forest (unit size; the instance matrix scales them). A pine: three stacked, slightly
+// ragged tiers; a hardwood: a cluster of three lumpy leaf masses. Same draw calls as a single cone or ball.
+function jitter(g, amt, seed) {
+  const p = g.attributes.position; let s = seed;
+  const r = () => (s = (s * 16807) % 2147483647) / 2147483647 - 0.5;
+  const key = new Map(); // shared positions move together, so the surface stays closed
+  for (let i = 0; i < p.count; i++) {
+    const k = `${p.getX(i).toFixed(3)},${p.getY(i).toFixed(3)},${p.getZ(i).toFixed(3)}`;
+    if (!key.has(k)) key.set(k, [r() * amt, r() * amt * 0.6, r() * amt]);
+    const d = key.get(k); p.setXYZ(i, p.getX(i) + d[0], p.getY(i) + d[1], p.getZ(i) + d[2]);
+  }
+  g.computeVertexNormals(); return g;
+}
+function pineGeo() {
+  const tiers = [[1.0, 0.0, 0.5], [0.78, 0.3, 0.42], [0.52, 0.58, 0.42]].map(([r, y, h], i) => {
+    const c = new T.ConeGeometry(r, h, 9, 1, true); c.translate(0, y + h / 2, 0); return jitter(c.toNonIndexed(), 0.12, 11 + i);
+  });
+  return T.mergeGeometries(tiers);
+}
+function oakGeo() {
+  const blobs = [[0, 0, 0, 1], [0.45, 0.25, 0.2, 0.7], [-0.4, 0.2, -0.25, 0.75]].map(([x, y, z, r], i) => {
+    const b = new T.IcosahedronGeometry(r, 1); b.translate(x, y, z); return jitter(b.toNonIndexed(), 0.18 * r, 31 + i);
+  });
+  return T.mergeGeometries(blobs);
+}
 function trees(group, park, L, gator) {
   const n = W3.quality === 'low' ? 220 : 760;
-  const pineG = new T.ConeGeometry(1, 1, 7); pineG.translate(0, 0.5, 0);
-  const oakG = new T.IcosahedronGeometry(1, 1);
+  const pineG = pineGeo(), oakG = oakGeo();
   const trunkG = new T.CylinderGeometry(0.5, 0.7, 1, 5); trunkG.translate(0, 0.5, 0);
   const dark = !!L.night;
   const bare = L.wood; // March at the historic park: bare grey hardwoods among dark pines (research/historic-park-visuals.md §7)
@@ -652,6 +700,15 @@ export function buildPark(parkKey, night) {
     const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
     const m = new T.Mesh(geo, new T.MeshStandardMaterial({ color: L.wallTop, roughness: 0.6, side: T.DoubleSide })); root.add(m); }
   root.add(wallRibbon(B.foul, B.foul.map(() => 4), new T.MeshStandardMaterial({ map: wallT, color: L.wood ? '#C9B79A' : '#FFFFFF', roughness: 0.9 }), 6));
+  // sponsor boards on the wall behind home (fictional local businesses), as on most high-school fields; the old park
+  // has painted boards in the period's style
+  // (the stretch straight behind home sits behind the home stand, which carries its own boards: seating o.signs)
+  for (const [a0, a1] of [[235, 250], [290, 305]]) {
+    const arc = []; for (let a = a0; a <= a1; a += 3) arc.push([57.7 * Math.cos(a * D2R), 57.7 * Math.sin(a * D2R) + 4]);
+    const signs = wallRibbon(arc, arc.map(() => 3.4), new T.MeshStandardMaterial({ map: sponsorTex(L.wood).clone(), roughness: 0.75, side: T.DoubleSide }), 3.4);
+    signs.material.map.needsUpdate = true; signs.material.map.repeat.set(-3.4 / 72, 1); signs.material.map.offset.x = a0 > 260 ? 0.5 : 0; // repeat negative: seen from inside
+    signs.position.y = 0.3; signs.castShadow = false; root.add(signs);
+  }
   // backstop netting
   const netC = canvas(64, 64), nx = netC.getContext('2d'); nx.strokeStyle = 'rgba(25,25,25,0.55)'; nx.lineWidth = 1.5; nx.strokeRect(0, 0, 64, 64);
   const netT = new T.CanvasTexture(netC); netT.wrapS = netT.wrapT = T.RepeatWrapping;
@@ -683,7 +740,7 @@ export function buildPark(parkKey, night) {
   } else {
     const big = parkKey === 'majestic';
     const arc = [[-62, 34], [-36, -40], [36, -40], [62, 34]];
-    for (let i = 0; i < arc.length - 1; i++) seating(root, [arc[i][0] * 1.22, arc[i][1] * 1.2 - 5], [arc[i + 1][0] * 1.22, arc[i + 1][1] * 1.2 - 5], big ? 12 : 8, L, { roof: big && i === 1, box: i === 1, base: 4 });
+    for (let i = 0; i < arc.length - 1; i++) seating(root, [arc[i][0] * 1.22, arc[i][1] * 1.2 - 5], [arc[i + 1][0] * 1.22, arc[i + 1][1] * 1.2 - 5], big ? 12 : 8, L, { roof: big && i === 1, box: i === 1, signs: i === 1, base: 4 });
     for (const s of [-1, 1]) seating(root, [s * 108, 50], [s * (big ? 215 : 175), big ? 155 : 118], big ? 8 : 6, L, { base: 3 });
   }
   dugout(root, -1, L); dugout(root, 1, L);
