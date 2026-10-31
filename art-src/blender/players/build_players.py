@@ -287,7 +287,7 @@ def region_eyes(o):
     regs = []
     for f in o.data.polygons:
         u = sum((uv.data[li].uv for li in f.loop_indices), Vector((0, 0))) / len(f.loop_indices)
-        regs.append(REG['dark'] if (u - Vector((0.5, 0.5))).length < 0.13 else REG['white'])
+        regs.append(REG['dark'] if (u - Vector((0.5, 0.5))).length < 0.19 else REG['white'])  # iris and pupil read as one dark disc at game distances
     set_region(o.data, regs)
 
 
