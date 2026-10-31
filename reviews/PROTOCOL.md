@@ -22,9 +22,9 @@ The developer (the main session) writes CHANGES.md and inspects every capture be
 1. `npm run build`, then `npm test`: all green.
 2. `node tools/shots-review.mjs review-loop-N --tiers=high,medium,low --verify`
 3. Performance and fidelity:
-   - `node tools/perf-review.mjs --out=reviews/loop-N/perf.json` (GPU, desktop and mobile, all tiers)
+   - `node tools/perf-review.mjs --repeat=3 --out=reviews/loop-N/perf.json` (GPU, desktop and mobile, all tiers; medians of 3, GPU timer readings are noisy)
    - `node tools/perf-review.mjs --throttle=4 --tiers=medium,low --viewports=mobile --out=reviews/loop-N/perf.json` (phone proxy)
-   - `node tools/perf-review.mjs --soft --tiers=low --viewports=desktop --scenes=duel,grounder --out=reviews/loop-N/perf.json` (software GL floor)
+   - `node tools/perf-review.mjs --soft --repeat=3 --tiers=low --viewports=desktop --scenes=duel,grounder --out=reviews/loop-N/perf.json` (software GL floor)
    - `node tools/fidelity.mjs N` once reference renders exist (writes `reviews/loop-N/fidelity.json`)
 4. The developer opens every frame, close-up and strip, and writes `loop-N/CHANGES.md` (facts only).
 5. `node tools/review-prep.mjs N` writes `loop-N/brief.md`, `brief-advocate.md`, `brief-judge.md`.
