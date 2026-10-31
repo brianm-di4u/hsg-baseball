@@ -13,7 +13,7 @@ export const LOOKS = {
   home: { sky: ['#4F93D6', '#CFE3EE'], sun: '#FFF1D6', sunI: 2.6, hemi: ['#CFE6FF', '#5E7A3E'], hemiI: 1.1, fog: '#C9DCE6', ridge: 'ridges-day', grass: '#4E9A3F', grass2: '#428A36', foul: '#3F7F35', dirt: '#B86A3E', track: '#A7643F', wall: '#1F4A33', wallTop: '#E6B422', crowd: 'crowd-modern', exposure: 0.88, sunPos: [-400, 600, 110] },
   majestic: { sky: ['#3F86CF', '#D2E6F0'], sun: '#FFF3DE', sunI: 2.7, hemi: ['#D2E8FF', '#3F7A40'], hemiI: 1.1, fog: '#CADDE7', ridge: 'ridges-day', grass: '#2E9A4A', grass2: '#27893F', foul: '#25803C', dirt: '#B5653A', track: '#8E5636', wall: '#173F30', wallTop: '#D4A017', crowd: 'crowd-modern', turf: true, exposure: 0.88, sunPos: [-380, 620, 100] },
   historic: { sky: ['#7FB2D6', '#F2D9A8'], sun: '#FFD9A0', sunI: 2.9, hemi: ['#F4DDB8', '#6C6A3A'], hemiI: 0.95, fog: '#E8D3AE', ridge: 'ridges-golden', grass: '#6F9C46', grass2: '#668F3F', foul: '#6A8E40', dirt: '#B98A5C', track: '#A47A50', wall: '#4B5A3A', wallTop: '#5A3E24', crowd: 'crowd-historic', wood: true, exposure: 0.92, sunPos: [-420, 300, 120] },
-  night: { sky: ['#0B1430', '#2C3C66'], sun: '#E8EEFF', sunI: 1.0, hemi: ['#4A5A88', '#1A2416'], hemiI: 0.55, fog: '#121A30', ridge: 'ridges-night', exposure: 1.05, sunPos: [60, 380, 160], night: true },
+  night: { sky: ['#0B1430', '#2C3C66'], sun: '#E8EEFF', sunI: 0.6, hemi: ['#4A5A88', '#1A2416'], hemiI: 0.36, fog: '#121A30', ridge: 'ridges-night', exposure: 1.05, sunPos: [60, 380, 160], night: true },
 };
 export function lookFor(parkKey, night) {
   const base = LOOKS[parkKey] || LOOKS.home;
@@ -696,9 +696,11 @@ export function buildPark(parkKey, night) {
     const [x, y] = polar(r, th);
     const th3 = wood ? 62 : parkKey === 'majestic' ? 90 : 75;
     tower(root, x, y, th3, L, wood);
-    if (L.night) { // each bank throws a pool of light onto the field; the key light stays dim
-      const sp = new T.SpotLight('#FFF4DC', 1.5, 0, 0.42, 0.75, 0);
+    if (L.night) { // each bank throws a pool of light onto the field, falling off toward the corners; the moon stays dim
+      const sp = new T.SpotLight('#FFF4DC', 2.3, 0, 0.36, 0.8, 0);
       sp.position.copy(V3(x, y, th3 + 6)); sp.target.position.copy(V3(x * 0.35, y * 0.42 + 20, 0));
+      // on the high tier the banks nearest home also cast shadows: players get the stadium's several soft shadows
+      if (W3.quality === 'high' && Math.abs(th) < 46) { sp.castShadow = true; sp.shadow.mapSize.set(1024, 1024); sp.shadow.bias = -0.0004; sp.shadow.normalBias = 0.08; sp.shadow.camera.near = 40; sp.shadow.camera.far = 900; }
       root.add(sp); root.add(sp.target);
     }
   }

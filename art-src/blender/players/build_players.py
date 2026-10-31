@@ -41,7 +41,7 @@ os.makedirs(OUT, exist_ok=True)
 VARIANTS = {
     'lean': dict(age=0.45, muscle=0.62, weight=0.42, height=0.68, proportions=0.85),  # ≈ 6 ft 3
     'average': dict(age=0.46, muscle=0.75, weight=0.55, height=0.62, proportions=0.8),  # ≈ 6 ft 0
-    'stocky': dict(age=0.48, muscle=0.8, weight=0.78, height=0.56, proportions=0.7),  # ≈ 5 ft 9
+    'stocky': dict(age=0.5, muscle=0.85, weight=0.92, height=0.52, proportions=0.65),  # ≈ 5 ft 8, heavy
 }
 
 addon_utils.enable('bl_ext.user_default.mpfb', default_set=True, persistent=True)
@@ -99,6 +99,7 @@ def bone_pos(rig, n, tail=False):
 
 # ------------------------------------------------------------------ 2. regions and the uniform
 DEFORM_SKIN = ('head', 'neck_01')
+NECKLINE = ('neck_01', 'spine_03', 'clavicle_l', 'clavicle_r')  # faces on these follow the neckline plane
 BONES = set()  # the rig's bone names: MPFB meshes also carry non-bone groups (whole-body masks and the like)
 def dominant(o, v):
     best, bw = None, 0
@@ -139,11 +140,19 @@ def dress_body(rig, body):
         ns = [vbone(v) for v in f.verts]; return max(set(ns), key=ns.count)
     torso = lambda f: not fbone(f).startswith(('upperarm', 'lowerarm', 'hand', 'index', 'middle', 'ring', 'pinky', 'thumb', 'clavicle', 'head', 'neck'))
     for z in (z_belt - 0.09, z_belt + 0.09): cut(torso, Vector((0, 0, z)), Vector((0, 0, 1)))
-    cut(lambda f: fbone(f) in ('neck_01', 'spine_03', 'clavicle_l', 'clavicle_r'), Vector((0, 0, z_collar)), Vector((0, 0.35, 1)).normalized())
+    nk = bone_pos(rig, 'neck_01')
+    def neck_zone(f):
+        c = f.calc_center_median(); b = fbone(f)
+        near = (Vector((c.x, c.y)) - Vector((nk.x, nk.y))).length < 0.6 and abs(c.z - z_collar) < 0.5
+        return (near or b in NECKLINE) and not b.startswith(('upperarm', 'lowerarm', 'hand', 'head'))
+    nn = Vector((0, -0.35, 1)).normalized()
+    for off in (0.0, -0.08):  # the neckline, and the lower edge of the collar band 0.08 ft below it
+        cut(neck_zone, Vector((0, 0, z_collar)) + nn * off, nn)
     cut(lambda f: fbone(f).startswith('calf'), Vector((0, 0, z_pants)), Vector((0, 0, 1)))
     for side, sx in (('l', 1), ('r', -1)):
         sh, el = Vector((sh_l.x * sx, sh_l.y, sh_l.z)), Vector((el_l.x * sx, el_l.y, el_l.z))
-        cut(lambda f, s=side: fbone(f) == f'upperarm_{s}', sh + (el - sh) * 0.5, (el - sh).normalized())
+        for t0 in (0.5, 0.43):  # the sleeve hem, and the top of the cuff band
+            cut(lambda f, s=side: fbone(f) == f'upperarm_{s}', sh + (el - sh) * t0, (el - sh).normalized())
     bm.to_mesh(me); bm.free()
     regs, drop = [], set()
     vdom = [dominant(body, v) for v in me.vertices]
@@ -152,14 +161,18 @@ def dress_body(rig, body):
         names = [vdom[i] for i in f.vertices]
         b = max(set(names), key=names.count)
         if b.startswith(('foot', 'ball')) or (c.z < z_ankle + 0.05 and b.startswith('calf')): drop.add(f.index); regs.append(REG['skin']); continue
-        if b in ('neck_01', 'spine_03', 'clavicle_l', 'clavicle_r') and (c - Vector((0, 0, z_collar))).dot(Vector((0, 0.35, 1)).normalized()) > 0:
-            regs.append(REG['skin']); continue  # above the neckline
+        # around the neck, the neckline plane alone decides (whatever bone a face leans on), so the collar edge is clean
+        nk = bone_pos(rig, 'neck_01')
+        near = (Vector((c.x, c.y)) - Vector((nk.x, nk.y))).length < 0.6 and abs(c.z - z_collar) < 0.5
+        if (near or b in NECKLINE) and not b.startswith(('upperarm', 'lowerarm', 'hand', 'head')):
+            h = (c - Vector((0, 0, z_collar))).dot(Vector((0, -0.35, 1)).normalized())
+            regs.append(REG['skin'] if h > 0 else REG['trim'] if h > -0.08 else REG['jersey']); continue
         if b.startswith(('hand', 'index', 'middle', 'ring', 'pinky', 'thumb')) or b in DEFORM_SKIN: regs.append(REG['skin']); continue
         if b.startswith('lowerarm'): regs.append(REG['under']); continue
         if b.startswith('upperarm'):
             sh, el = (sh_l, el_l) if b.endswith('_l') else (Vector((-sh_l.x, sh_l.y, sh_l.z)), Vector((-el_l.x, el_l.y, el_l.z)))
             t = (c - sh).dot((el - sh).normalized()) / (el - sh).length
-            regs.append(REG['jersey'] if t < 0.5 else REG['under']); continue
+            regs.append(REG['jersey'] if t < 0.43 else REG['trim'] if t < 0.5 else REG['under']); continue
         if b.startswith(('thigh',)): regs.append(REG['pants']); continue
         if b.startswith('calf'): regs.append(REG['pants'] if c.z > z_pants else REG['sock']); continue
         # torso: jersey above the belt, the belt, pants below
@@ -168,17 +181,17 @@ def dress_body(rig, body):
         else: regs.append(REG['pants'])
     # Cloth: first relax the anatomy out of the garment areas (cloth bridges the hollows and hides the nipples,
     # navel and crease detail), then push each vertex out by the garment over it, averaged over its faces.
-    thick = {REG['jersey']: 0.07, REG['pants']: 0.1, REG['belt']: 0.085, REG['sock']: 0.025, REG['under']: 0.02}
-    loose = {REG['jersey'], REG['pants'], REG['belt']}
+    thick = {REG['jersey']: 0.055, REG['trim']: 0.06, REG['pants']: 0.075, REG['belt']: 0.07, REG['sock']: 0.025, REG['under']: 0.02}
+    loose = {REG['jersey'], REG['trim'], REG['pants'], REG['belt']}
     bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table(); bm.verts.ensure_lookup_table()
     cloth = [v for v in bm.verts if v.link_faces and all(regs[f.index] in loose for f in v.link_faces)]
-    for _ in range(12): bmesh.ops.smooth_vert(bm, verts=cloth, factor=0.6, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+    for _ in range(22): bmesh.ops.smooth_vert(bm, verts=cloth, factor=0.6, use_axis_x=True, use_axis_y=True, use_axis_z=True)
     bm.normal_update()
     off = []
     for v in bm.verts:
         ts = [thick.get(regs[f.index], 0.0) for f in v.link_faces]
         t = sum(ts) / max(1, len(ts))
-        if z_pants < v.co.z < z_knee + 0.5 and any(regs[f.index] == REG['pants'] for f in v.link_faces): t += 0.05  # baggy over the knee
+        if z_pants < v.co.z < z_knee + 0.5 and any(regs[f.index] == REG['pants'] for f in v.link_faces): t += 0.03  # baggy over the knee
         off.append(v.normal * t)
     for v, o in zip(bm.verts, off): v.co += o
     cloth = [v for v in bm.verts if v.link_faces and all(regs[f.index] in loose for f in v.link_faces)]
@@ -256,7 +269,7 @@ def head_frame(rig, body, band=0.36):
 def make_cap(rig, body, helmet=False):
     c, rx, ry, top = head_frame(rig, body, 0.42 if helmet else 0.34)
     bm = bmesh.new()
-    pad = 0.07 if helmet else 0.03
+    pad = 0.07 if helmet else 0.05  # a cap's crown covers the hair
     h = (top - c.z) + pad
     rings, seg = 9, 36
     verts = []
@@ -264,7 +277,8 @@ def make_cap(rig, body, helmet=False):
         a = (i / rings) * (math.pi / 2)
         z = c.z + math.sin(a) * h
         k = math.cos(a)
-        row = [bm.verts.new((c.x + math.cos(t) * (rx + pad) * k, c.y + math.sin(t) * (ry + pad) * k, z)) for t in [j / seg * math.tau for j in range(seg)]] if i < rings else [bm.verts.new((c.x, c.y, z))]
+        drop = (0.0 if helmet else 0.2) * (1 - i / rings)  # a cap sits lower at the back, over the nape
+        row = [bm.verts.new((c.x + math.cos(t) * (rx + pad) * k, c.y + math.sin(t) * (ry + pad) * k, z - drop * max(0.0, math.sin(t)))) for t in [j / seg * math.tau for j in range(seg)]] if i < rings else [bm.verts.new((c.x, c.y, z))]
         verts.append(row)
     for i in range(rings - 1):
         for j in range(seg): bm.faces.new((verts[i][j], verts[i][(j + 1) % seg], verts[i + 1][(j + 1) % seg], verts[i + 1][j]))
@@ -274,9 +288,10 @@ def make_cap(rig, body, helmet=False):
     blen = 0.32 if not helmet else 0.2
     brim = []
     for j in range(13):
-        t = math.pi + (j / 12) * math.pi  # front half: angles π..2π have sin < 0 → -Y
+        t = math.pi * 7 / 6 + (j / 12) * math.pi * 2 / 3  # the front 120°: angles with sin < 0 face -Y
         x = c.x + math.cos(t) * (rx + pad); y = c.y + math.sin(t) * (ry + pad)
-        ox = c.x + math.cos(t) * (rx + pad + blen * 0.55); oy = c.y + math.sin(t) * (ry + pad + blen)
+        k = math.sin(t) ** 2  # full length at the front, tapering to nothing at the bill's corners
+        ox = c.x + math.cos(t) * (rx + pad + blen * 0.25 * k); oy = c.y + math.sin(t) * (ry + pad + blen * k)
         brim.append((bm.verts.new((x, y, z0)), bm.verts.new((ox, oy, z0 - 0.04))))
     thin = []  # one-sided sheets, given thickness below
     for j in range(12):
@@ -299,7 +314,7 @@ def make_mask(rig, body):
     c, rx, ry, top = head_frame(rig, body)
     bm = bmesh.new()
     zf0, zf1 = c.z - 1.0, c.z - 0.12  # chin to brow
-    yf = c.y - ry - 0.18
+    yf = c.y - ry - 0.07  # the cage sits just off the face
     def bar(p0, p1, r=0.022):
         d = (Vector(p1) - Vector(p0)); n = 6
         ax = d.normalized(); side = ax.cross(Vector((0, 1, 0))) if abs(ax.y) < 0.9 else ax.cross(Vector((1, 0, 0)))
@@ -555,7 +570,7 @@ for vname in args.variants.split(','):
     def surf(dz, dy):
         hit = bvh.ray_cast(Vector((0, o.y, o.z + dz)), Vector((0, dy, 0)))
         return abs(hit[0].y - o.y) + 0.02 if hit[0] else 0.45
-    chest = {'upFront': 0.22, 'front': surf(0.22, -1), 'upBack': 0.15, 'back': surf(0.15, 1)}
+    chest = {'upFront': 0.5, 'front': surf(0.5, -1), 'upBack': 0.4, 'back': surf(0.4, 1)}  # lettering at chest height, the number between the shoulder blades
     names = []
     if not args.no_anim and vname == 'average':  # clips ship once; the game binds them to every build by bone name
         v2rig, actions = load_v2()

@@ -363,7 +363,7 @@ export function drawField(g, ui) {
   }
   if (ov()) { // 3D: only the call banner and effects
     clearOv();
-    if (tl) { const live = tl.calls.filter((k) => t >= k.t && t < k.t + 1.3).slice(-1)[0]; if (live) callBanner(c, live.text, live.kind); }
+    if (tl) { const live = tl.calls.filter((k) => t >= k.t && t < k.t + callDur(k)).slice(-1)[0]; if (live) callBanner(c, live.text, live.kind, t - live.t, callDur(live)); }
     drawFx(c); return;
   }
   const sh = R.shake && !R.reduced ? [(Math.random() - 0.5) * R.shake, (Math.random() - 0.5) * R.shake] : [0, 0];
@@ -395,19 +395,33 @@ export function drawField(g, ui) {
     c.fillStyle = 'rgba(0,0,0,0.35)'; c.beginPath(); c.ellipse(gp[0], gp[1], br, br * 0.6, 0, 0, TAU); c.fill();
     c.fillStyle = '#FFFFFF'; c.strokeStyle = '#1B1B1B'; c.lineWidth = 1; c.beginPath(); c.arc(bp[0], bp[1], br, 0, TAU); c.fill(); c.stroke();
     // calls
-    const live = tl.calls.filter((k) => t >= k.t && t < k.t + 1.3).slice(-1)[0];
-    if (live) callBanner(c, live.text, live.kind);
+    const live = tl.calls.filter((k) => t >= k.t && t < k.t + callDur(k)).slice(-1)[0];
+    if (live) callBanner(c, live.text, live.kind, t - live.t, callDur(live));
   }
   c.restore();
   drawFx(c);
 }
 
-function callBanner(c, text, kind) {
+// A home run's call stays up through the trot; the others for a beat.
+const callDur = (k) => (k.kind === 'hr' ? 3.5 : 1.3);
+// Broadcast-style call: a dark panel with an accent bar in the call's colour, the headline, and the detail after
+// a ' · ' on a second line ("HOME RUN · 400 FT"). It slides in and fades out (age and dur in seconds).
+function callBanner(c, text, kind, age = 1, dur = 1.3) {
   const col = { out: '#FF8A7A', safe: '#8FE3A8', hr: '#FFD84D', hit: '#FFFFFF', foul: '#E9E2D2', info: '#FFFFFF' }[kind] || '#FFFFFF';
-  const size = Math.round(Math.min(56, Math.max(26, R.W / 14)));
-  c.font = `900 ${size}px "Arial Black", Impact, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.lineWidth = Math.max(4, size / 7); c.strokeStyle = 'rgba(10,9,16,0.85)'; c.strokeText(text, R.W / 2, R.H * 0.16);
-  c.fillStyle = col; c.fillText(text, R.W / 2, R.H * 0.16);
+  const [head, ...rest] = String(text).split(' · '), detail = rest.join(' · ');
+  const size = Math.round(Math.min(52, Math.max(24, R.W / 15))), dsize = Math.round(size * 0.45);
+  const u = R.reduced ? 1 : Math.min(1, age / 0.22), ease = 1 - (1 - u) ** 3, fade = Math.min(1, (dur - age) / 0.25);
+  c.save(); c.globalAlpha = Math.max(0, Math.min(ease, fade));
+  c.font = `900 ${size}px "Arial Black", Impact, sans-serif`;
+  const hw = c.measureText(head).width; c.font = `700 ${dsize}px "Arial", sans-serif`; const dw = detail ? c.measureText(detail.toUpperCase()).width : 0;
+  const w = Math.min(R.W - 24, Math.max(hw, dw) + size * 1.2), h = size * 1.25 + (detail ? dsize * 1.5 : 0);
+  const x = R.W / 2 - w / 2 - (1 - ease) * 40, y = R.H * 0.16 - size * 0.7;
+  c.fillStyle = 'rgba(12,16,22,0.84)'; c.beginPath(); (c.roundRect ? c.roundRect(x, y, w, h, 8) : c.rect(x, y, w, h)); c.fill();
+  c.fillStyle = col; c.fillRect(x, y, 7, h);
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = `900 ${size}px "Arial Black", Impact, sans-serif`; c.fillStyle = col; c.fillText(head, x + w / 2 + 3, y + size * 0.68);
+  if (detail) { c.font = `700 ${dsize}px "Arial", sans-serif`; c.fillStyle = '#E8E4DA'; c.fillText(detail.toUpperCase(), x + w / 2 + 3, y + size * 1.25 + dsize * 0.55); }
+  c.restore();
 }
 
 // ---------------------------------------------------------------- effects

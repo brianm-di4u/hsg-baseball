@@ -1,0 +1,219 @@
+[
+  {
+    "id": "G-regression-characters",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS6",
+    "fix": "Find and undo what lowered characters since loop 1",
+    "priority": 99,
+    "selected": true
+  },
+  {
+    "id": "G-regression-charfit",
+    "category": "charfit",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS6",
+    "fix": "Find and undo what lowered charfit since loop 1",
+    "priority": 99,
+    "selected": true
+  },
+  {
+    "id": "G-face-blackout",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS3",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R04-batter"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Dark skin under a helmet in daylight renders at 1.9/255. Add a per-actor face fill (a shadowless point or hemisphere term targeted at the head bone, unshadowed by the helmet) or a luminance floor on skin under brims, plus an eye specular. Test: mean face luma >= 40/255 with eyes, nose and mouth distinguishable in crops/high/R02-batter_head; also +0.5 lighting.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-run-arms",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R10",
+      "strips/high/R07",
+      "crops/high/R07-SS"
+    ],
+    "fix": "Let the mocap 09_01 arm tracks drive the arms during run and trot (remove the upper-body override), curl the hands into loose fists, and carry the glove as an additive layer. Test: across strips/high/R10 the hands alternate front and back by >= 25 cm and no open upturned palm shows.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-garment-integrity",
+    "category": "characters",
+    "expectedGain": 1,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R07-SS",
+      "crops/high/R05-ump_head",
+      "crops/high/R02-batter_head"
+    ],
+    "benchmark": "smb4-4",
+    "fix": "Build the jersey as an offset shell that hides the chest detail; replace the sawtooth neckline with a smooth modelled trim loop; close the umpire's neckline; remove the batter's shoulder spike (stray vertices or weights); add a placket strip with buttons; project the wordmark onto the jersey surface at chest height, clear of the glove. Test: no sawtooth, nipple bump, skin breakthrough or lettering outside the cloth silhouette in the four cited crops.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-framing-runners",
+    "category": "readability",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS5",
+    "evidence": [
+      "high/desktop/R16",
+      "high/mobile/R10",
+      "high/desktop/R10"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "The home-run trot camera follows the batter-runner; the batting camera widens or pans to keep the lead runner >= 5% inside the frame edge. Test: runner fully visible in high/desktop/R10, high/mobile/R10 and high/desktop/R16; also +0.25 mobile.",
+    "priority": 0.75,
+    "selected": true
+  },
+  {
+    "id": "G-ui-contrast-hints",
+    "category": "ui",
+    "expectedGain": 0.5,
+    "severity": 2,
+    "effort": "S",
+    "workstream": "WS7",
+    "evidence": [
+      "high/landscape/R05",
+      "high/desktop/R06",
+      "high/desktop/R01"
+    ],
+    "benchmark": "ootp26-1",
+    "fix": "Fade the aim box and crosshair to corner ticks while the pitch is in flight; hide keyboard/mouse hints on coarse-pointer devices; make the title panel opaque with a high-contrast selected state. Test: catcher's head unobstructed in high/landscape/R05; no 'arrows/mouse' text on phone captures; Season label >= 4.5:1 contrast in high/desktop/R01.",
+    "priority": 0.75,
+    "selected": true
+  },
+  {
+    "id": "G-close-ball-size",
+    "category": "animation",
+    "expectedGain": 0.25,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS5",
+    "evidence": [
+      "crops/high/R04-batter",
+      "strips/high/R04"
+    ],
+    "fix": "The loop-2 close-camera ball sizing does not take effect in close-up captures. Compute the ball's minimum pixel size from the active (close) camera, or clamp it to its true 2.9 in diameter when that camera is within 10 m. Test: ball <= 33% of helmet width in crops/high/R04-batter.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-fielding-reach",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R07",
+      "crops/high/R09-LF"
+    ],
+    "fix": "Glove-hand IK to the predicted ball position over the last 0.3 s before arrival, plus a ground-ball scoop clip and an overhead-catch clip timed to arrival. Test: in strips/high/R07 panels 5-8 the glove moves to and closes on the ball; glove above the head in crops/high/R09-LF.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-glove-model",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R07-SS",
+      "crops/high/R12-pitcher"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Model a fielder's glove with four finger stalls, thumb, web and pocket that enclose the hand's fingers (no nubs through the shell), with a leather normal map and lacing; a padded catcher's mitt with a rim. Test: stalls and web visible and no skin through the glove in the cited crops and crops/high/R06-catcher_glove.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-gear-attach",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R14-batter",
+      "crops/high/R05-ump_head",
+      "crops/high/R02-batter_head"
+    ],
+    "fix": "Parent the umpire's mask to the head bone with modelled straps and a harness, sitting against the face; weld the mask bar segments (no skin flecks at joints); replace the batter's flat earflap quad with a curved ear guard; add short hair meshes under caps so scalps don't read bald. Test: no gap between the umpire's mask and face in crops/high/R14-batter, no flecks in crops/high/R05-ump_head, no flat quad at the jaw in crops/high/R02-batter_head.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-grip-ground",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R05-batter_feet",
+      "crops/high/R14-batter",
+      "crops/high/R02-batter_hands"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Correct the bat_stance root height (or add foot IK to the ground plane) and constrain both hands to the handle with fingers closed around it. Test: both soles touch their shadow in crops/high/R05-batter_feet; fingers wrap the handle with no visible gap in crops/high/R02-batter_hands.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-body-proportions",
+    "category": "charfit",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R12-pitcher",
+      "crops/high/R14-batter"
+    ],
+    "benchmark": "art-src/samples/reference-renders/mpfb2_athlete_front.png",
+    "fix": "Trim shoulder and torso girth toward the MPFB2 athlete; taper the pant legs and add knee and calf structure beneath them. Test: front IoU >= 0.90 against mpfb2_athlete_front_mask, and a visible knee break in crops/high/R12-pitcher.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-phone-gpu-budget",
+    "category": "mobile",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS6",
+    "evidence": [
+      "reviews/loop-2/perf.json medium mobile grounder gpuMs 1.26",
+      "reviews/loop-1/perf.json medium mobile grounder gpuMs 0.855"
+    ],
+    "fix": "Performance gate fails: est. phone GPU 1.26 ms x 25 = 31.5 ms > 26 ms. GPU ms rose 30-90% on medium/high at identical tris and calls while low is flat. Re-run perf-review 3x interleaved and take the median; bisect the loop-2 player changes (skin self-light term, smooth-shaded subdivided cap/helmet/mask/glove, crowd tile rescale) with a GPU timer per change; remove or cheapen the regressing per-pixel cost on medium (e.g. bake the self-light into albedo, drop the extra pass). Test: median unthrottled medium-mobile gpuMs <= 1.04 ms in every scene (<= 26 ms estimated) and phone-proxy night p95 <= 41.7 ms.",
+    "priority": 0.375,
+    "selected": false
+  }
+]

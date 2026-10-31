@@ -73,12 +73,22 @@ def retarget(src, dst, name, samples, travel='keep', cyclic=False):
     pairs = [(s, t) for s, t in MAP.items() if s in src.pose.bones and t in dst.pose.bones]
     s_rest = {s: (sw @ src.data.bones[s].matrix_local).to_quaternion() for s, _ in pairs}
     d_rest = {s: (dw @ dst.data.bones[t].matrix_local).to_quaternion() for s, t in pairs}
+    # rest alignment as a full frame, not just a direction: each bone's axis plus the character's forward, so the bone's
+    # roll matches too (with only the axis, an arm's bend plane came out twisted and the run's arm swing went sideways)
+    def fwd_rest(rig, w, l, r):
+        return (w.to_3x3() @ (rig.data.bones[l].head_local - rig.data.bones[r].head_local)).cross(Vector((0, 0, 1))).normalized()
+    f_s, f_d = fwd_rest(src, sw, 'LeftUpLeg', 'RightUpLeg'), fwd_rest(dst, dw, 'thigh_l', 'thigh_r')
+    def frame(d, f):
+        ref = f - d * f.dot(d)
+        if ref.length < 0.2: ref = Vector((0, 0, 1)) - d * d.z
+        ref.normalize()
+        return Matrix((d, ref, d.cross(ref))).transposed()  # columns: axis, forward ⟂ axis, their cross
     align = {}
     for s, t in pairs:
         sb, db = src.data.bones[s], dst.data.bones[t]
         sd = (sw.to_3x3() @ (sb.tail_local - sb.head_local)).normalized()
         dd = (dw.to_3x3() @ (db.tail_local - db.head_local)).normalized()
-        align[s] = dd.rotation_difference(sd)
+        align[s] = (frame(sd, f_s) @ frame(dd, f_d).transposed()).to_quaternion()
     order = sorted(pairs, key=lambda p: depth(dst.data.bones[p[1]]))
     for pb in dst.pose.bones: pb.rotation_mode = 'QUATERNION'
     # hips path: start point and (for in-place clips) linear drift
@@ -152,7 +162,7 @@ def build(dst, root, log):
     o = load(bvh('124_07')); n = int(o.animation_data.action.frame_range[1])
     half = min(n, 2 + 600)
     con, sp = speed_peak(o, 'RightHand', 2, half)
-    start = con - 42  # 0.35 s of load and stride before contact
+    start = con - 60  # 0.5 s of load, stride and swing before contact (the game plays the first part during the pitch)
     face(o, hips_forward(o, start))
     made.append(('bat_swing', retarget(o, dst, 'bat_swing', warp([(0, 0.267, start, con), (0.267, 0.867, con, min(n, con + 72))]))))
     made.append(('bat_stance', retarget(o, dst, 'bat_stance', warp([(0, 1.0, start - 60, start - 30), (1.0, 2.0, start - 30, start - 60)]), cyclic=True)))
@@ -166,8 +176,9 @@ def build(dst, root, log):
     made.append(('throw', retarget(o, dst, 'throw', warp([(0, 0.333, rel - 40, rel), (0.333, 0.8, rel, min(n, rel + 56))]))))
     log(f'throw: 143_20 release {rel}')
     bpy.data.objects.remove(o)
-    # ---- run (09_01): one gait cycle (left foot strike to left foot strike), in place, as 16 frames (0.533 s)
-    o = load(bvh('09_01')); n = int(o.animation_data.action.frame_range[1])
+    # ---- run (16_55, the take with the strongest arm drive): one gait cycle (left foot strike to left foot strike),
+    # in place, as 16 frames (0.533 s)
+    o = load(bvh('16_55')); n = int(o.animation_data.action.frame_range[1])
     lf = track(o, 'LeftFoot', 2, n)
     lows = [i for i in range(2, len(lf) - 2) if lf[i].z <= min(lf[i - 2].z, lf[i - 1].z, lf[i + 1].z, lf[i + 2].z)]
     lows = [i + 2 for i in lows if lf[i].z < min(p.z for p in lf) + 0.15]
@@ -176,6 +187,6 @@ def build(dst, root, log):
     h0, h1 = track(o, 'Hips', c0, c0)[0], track(o, 'Hips', c1, c1)[0]
     face(o, h1 - h0)
     made.append(('run', retarget(o, dst, 'run', [c0 + (c1 - c0) * k / 16 for k in range(17)], travel='none', cyclic=True)))
-    log(f'run: 09_01 cycle {c0}-{c1}')
+    log(f'run: 16_55 cycle {c0}-{c1}')
     bpy.data.objects.remove(o)
     return [m for m, _ in made]

@@ -116,7 +116,7 @@ export function resize3d() {
   if (!R3.ok) return;
   const r = R3.canvas.parentElement.getBoundingClientRect();
   R3.W = Math.max(1, Math.round(r.width)); R3.H = Math.max(1, Math.round(r.height));
-  const dprMax = R3.quality === 'high' ? 2 : R3.quality === 'medium' ? 1.5 : R3.soft ? 0.6 : 1; // software GL: a reduced internal resolution keeps it playable
+  const dprMax = R3.quality === 'high' ? 2 : R3.quality === 'medium' ? 1.35 : R3.soft ? 0.6 : 1; // software GL: a reduced internal resolution keeps it playable
   R3.renderer.setPixelRatio(Math.min(dprMax, window.devicePixelRatio || 1));
   R3.renderer.setSize(R3.W, R3.H, false);
   R3.cam.aspect = R3.W / R3.H; R3.cam.updateProjectionMatrix();
@@ -284,6 +284,10 @@ function ikArm(actor, side, target) {
   fo.updateMatrixWorld(true);
   reachArm(actor, side, target, 1);
 }
+// The swing clip's first LOAD seconds are the load and stride (mocap): played while the pitch is on its way, so the
+// batter strides into the ball, then the swing proper runs from the swing start to contact.
+const LOAD = 0.12;
+function loadAt(g, pt) { const f = g.phaseT / (pt.T * g.scale); return LOAD * clamp01((f - 0.25) / 0.6); }
 // The batter's free (left) hand on the handle, just below the right hand on the bat's axis.
 function gripBat(actor) {
   const bat = actor.bones.bat;
@@ -344,7 +348,8 @@ function fieldCamera(g, tl, t, park, ui) {
   const intro = clamp01(t / 0.7), ease = intro * intro * (3 - 2 * intro);
   const reach = Math.hypot(bx, by);
   const tx = lerp(0, bx, 0.7), ty = lerp(70, Math.max(30, by), 0.65), tz = Math.min(90, bz * 0.62); // look up with high flies so the ball stays in frame
-  const dist = (portrait ? 150 : 175) + reach * 0.32, h = 62 + reach * 0.16;
+  // closer and tighter than a stadium's high-home camera: fielders read at about 30 px instead of 20
+  const dist = (portrait ? 130 : 150) + reach * 0.3, h = 54 + reach * 0.15;
   const dirx = tx / Math.max(1, Math.hypot(tx, ty + 40)), diry = (ty + 40) / Math.max(1, Math.hypot(tx, ty + 40));
   const px = tx - dirx * dist * 0.5, py = ty - diry * dist, pz = h;
   const c = R3.cam;
@@ -353,7 +358,7 @@ function fieldCamera(g, tl, t, park, ui) {
   const p1 = g2t(px, py, pz), l1 = g2t(tx, ty, tz);
   c.position.lerpVectors(d0.p, p1, ease);
   const look = new T.Vector3().lerpVectors(d0.l, l1, ease);
-  c.fov = lerp(d0.fov || 40, portrait ? 60 : 40, ease);
+  c.fov = lerp(d0.fov || 40, portrait ? 54 : 34, ease);
   c.lookAt(look); c.updateProjectionMatrix();
   return { tx, ty };
 }
@@ -439,10 +444,11 @@ function duelScene(g, ui) {
   else if (sw && pt && ['flight', 'result', 'play', 'umpwait'].includes(g.phase)) {
     const T0 = pt.T * g.scale;
     const st = g.swing ? g.swing.at : T0 + (sw.u || 0) * ui.W - 0.1 * g.scale;
-    const k = 0.267 / (0.1 * g.scale);
-    const ct = g.phase === 'flight' ? (g.phaseT - st) * k : 0.9;
-    if (ct < 0) pose(bat, 'bat_stance', tA); else pose(bat, 'bat_swing', ct);
-  } else pose(bat, 'bat_stance', tA);
+    const k = (0.267 - LOAD) / (0.1 * g.scale); // the swing proper, from the end of the load to contact at 0.267
+    const ct = g.phase === 'flight' ? LOAD + (g.phaseT - st) * k : 0.9;
+    if (ct < LOAD) pose(bat, 'bat_swing', loadAt(g, pt)); else pose(bat, 'bat_swing', ct);
+  } else if (pt && g.phase === 'flight') pose(bat, 'bat_swing', loadAt(g, pt)); // load and stride while the pitch comes
+  else pose(bat, 'bat_stance', tA);
   gripBat(bat);
   setNumber(bat, B.num, bT.kit, bT.team);
   // runners on base, leading off toward the next base
@@ -513,6 +519,8 @@ function fieldScene(g, ui) {
       place(a, p.x, p.y, 0, 0, 0, P.throws === 'L');
       const high = (ballAt({ s: tl.ball }, hold.t0).z || 0) > 3.5;
       pose(a, high ? 'catch_high' : 'field_ground', 0.2 + (t - hold.t0 + 0.35) * 0.9);
+      // the glove goes to the ball as it arrives (two-bone IK on the glove arm), then stays with it
+      if (t < hold.t0 + 0.15) { const bp = g2t(b.x, b.y, Math.max(0.3, b.z)), gp = boneWorld(a, 'glove'); if (bp.distanceTo(gp) < 7) ikArm(a, 'L', bp); }
     } else if (sp > 1.5) {
       place(a, p.x, p.y, 0, p.x + vx, p.y + vy, false);
       pose(a, 'run', t * Math.min(1.25, sp / 18) + i * 0.1);
@@ -647,7 +655,7 @@ export function render3d(mode, g, ui, titleT = 0) {
   }
   if (W3.water) W3.water.color.setHSL(0.52, 0.27, 0.4 + 0.02 * Math.sin(amb() * 2));
   if (R3.look) closeCamera(R3.look);
-  { const f = R3.fill, c = R3.cam; f.position.copy(c.position).add(new T.Vector3(0, 30, 0)); c.getWorldDirection(f.target.position); f.target.position.multiplyScalar(100).add(c.position); f.intensity = 0.3 * R3.sun.intensity; }
+  { const f = R3.fill, c = R3.cam; f.position.copy(c.position).add(new T.Vector3(0, 30, 0)); c.getWorldDirection(f.target.position); f.target.position.multiplyScalar(100).add(c.position); f.intensity = 0.3 * R3.sun.intensity; f.visible = R3.quality === 'high'; } // phones: one light fewer per pixel (skin keeps its own light floor)
   // structures the camera sits behind (the press box, from the high-home field camera) would fill the frame: hide them
   if (R3.park && R3.park.camHide) {
     const cd = Math.hypot(R3.cam.position.x, R3.cam.position.z), p = new T.Vector3();

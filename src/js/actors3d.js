@@ -82,7 +82,9 @@ function paletteMaterial() {
 #ifdef USE_MAP
 if (rid == ${RG.skin}) diffuseColor.rgb *= texture2D(map, vMapUv).rgb * 2.0; // the detail map is stored at half scale
 #endif`)
-      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = pc.a;');
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = pc.a;')
+      // skin keeps a little of its own light: faces under a brim or a helmet still show eyes and brows
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\nif (rid == ${RG.skin}) totalEmissiveRadiance += diffuseColor.rgb * 0.09 + vec3(0.016, 0.012, 0.01);`);
   };
   m.customProgramCacheKey = () => 'ds-palette';
   return m;
@@ -194,11 +196,12 @@ export function pose(actor, name, t, name2 = null, t2 = 0, w2 = 0) {
   set(name, t, 1 - (name2 ? w2 : 0));
   if (name2) set(name2, t2, w2);
   actor.mixer.update(0);
-  if (actor.v3) curlFingers(actor, actor.show.has('bat') ? 1 : 0.25, actor.show.has('bat') ? 1 : actor.show.has('glove') ? 0.6 : 0.25);
+  const loose = name === 'run' ? 0.7 : 0.25; // a runner's hands close to loose fists
+  if (actor.v3) curlFingers(actor, actor.show.has('bat') ? 1 : loose, actor.show.has('bat') ? 1 : actor.show.has('glove') ? 0.6 : loose);
   ground(actor, !FLIGHT.has(name));
   for (const n of ACC) { const b = actor.bones[bn(n)]; if (b) { const s = actor.show.has(n) ? 1 : 0.0001; b.scale.set(s, s, s); } }
   // hair stays under a cap or helmet (v3 hair is real geometry and would poke through)
-  if (actor.v3) { const v = actor.mat.userData.vis; if (v[RG.skin]) v[RG.hair] = actor.show.has('cap') || actor.show.has('helmet') ? 0 : 1; }
+  if (actor.v3) { const v = actor.mat.userData.vis; if (v[RG.skin]) v[RG.hair] = actor.show.has('helmet') || actor.show.has('cap') ? 0 : 1; } // hair would poke through; the cap covers the nape
 }
 const LOOPS = new Set(['idle', 'ready', 'bat_stance', 'bat_bunt', 'crouch', 'ump', 'run', 'cheer']);
 // Finger curl (v3 hands; the clips don't key fingers): 0 = the rest pose's open hand, 1 = a fist round a bat handle.

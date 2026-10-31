@@ -107,6 +107,60 @@
         "effortWeights": "S=1, M=2, L=4"
       },
       "date": "2026-10-31"
+    },
+    {
+      "loop": 2,
+      "scores": {
+        "characters": 4.5,
+        "charfit": 5,
+        "animation": 5,
+        "environment": 5.5,
+        "lighting": 5.5,
+        "ui": 6,
+        "readability": 6,
+        "mobile": 6
+      },
+      "total": 43.5,
+      "stalls": 0,
+      "verdict": "continue",
+      "critics": {
+        "critic-claude": {
+          "characters": 4.5,
+          "charfit": 4.5,
+          "animation": 4.5,
+          "environment": 5.5,
+          "lighting": 5.5,
+          "ui": 6,
+          "readability": 5.5,
+          "mobile": 5.5
+        },
+        "critic-codex": {
+          "characters": 4.5,
+          "charfit": 5,
+          "animation": 5,
+          "environment": 5,
+          "lighting": 5.5,
+          "ui": 6,
+          "readability": 6,
+          "mobile": 6
+        },
+        "advocate": {
+          "characters": 4.5,
+          "charfit": 5,
+          "animation": 5,
+          "environment": 5.5,
+          "lighting": 6,
+          "ui": 6,
+          "readability": 6,
+          "mobile": 6
+        }
+      },
+      "calibration": {
+        "perfGate": "fail: est. phone GPU 1.26 ms x 25 = 31.5 ms > 26 ms (medium mobile grounder; night 1.00 ms = 25.1 ms). Medium/high GPU ms up 30-90% vs loop 1 at identical tris/calls; low flat. High desktop min 225 fps / p95 8.9 ms pass; phone proxy min 47.4 fps pass (night p95 42.2 ms at the 24 fps floor, watch); software GL 14.0/18.2 vs 15.1/19.9 baseline, within noise; heap 75/83.2/71.5 MB pass; download not in perf.json.",
+        "factRulings": "pitch reaches stride and release in R06 and R12 crop (advocate right, A wrong); R04 strip has a front-knee load in panel 4 (A wrong); R13 has an infield-to-corner gradient (A wrong) but not tower pools; catcher cage hangs from the helmet, only the umpire mask floats (advocate right); wordmark floats outside the torso in R07-SS (B right, A missed); batter soles hover in R05-batter_feet (B right); white ring marks possession in R07 panel 8 (B wrong); mobile R02 sky about 27% (A wrong); landscape R05 pill clear of the pitcher (A wrong) but landscape crosshair covers the catcher's head; R07 strip camera cut 4-5 (advocate right); close-up ball still about 80% of helmet (real); umpire cap mark unresolved at crop resolution.",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
     }
   ]
 }
