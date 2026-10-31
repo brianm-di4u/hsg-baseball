@@ -161,10 +161,18 @@ function makeForm(proto, clips, mat) {
   // and each foot's rest orientation in the root's space, for planting it flat (heel, ball and edges down)
   const footQ = {}, rinv = new T.Matrix4().copy(root.matrixWorld).invert(), fm = new T.Matrix4(), sc = new T.Vector3(), ps = new T.Vector3();
   for (const n of ['foot_l', 'foot_r']) if (bones[n]) { const q = new T.Quaternion(); fm.multiplyMatrices(rinv, bones[n].matrixWorld).decompose(ps, q, sc); footQ[n] = q; }
+  // the clavicles' bind rotations (local), from the skin's bind matrices: the clips key them, so the live pose can't tell
+  const sk = lods.find(Boolean)?.skeleton, bindQ = {};
+  if (sk) for (const n of ['clavicle_l', 'clavicle_r']) {
+    const i = sk.bones.findIndex((b) => b.name === n); if (i < 0) continue;
+    const pi = sk.bones.indexOf(sk.bones[i].parent), w = new T.Matrix4().copy(sk.boneInverses[i]).invert();
+    if (pi >= 0) w.premultiply(sk.boneInverses[pi]);
+    const q = new T.Quaternion(); w.decompose(new T.Vector3(), q, new T.Vector3()); bindQ[n] = q;
+  }
   const mixer = new T.AnimationMixer(root);
   const acts = {};
   for (const [n, c] of Object.entries(clips)) { const a = mixer.clipAction(c); a.play(); a.enabled = false; a.setEffectiveWeight(0); acts[n] = a; }
-  return { root, lods, bones, mixer, acts, feet, footQ, skinDecals, lod: 0 }; // lods[k] is LODk; a tier's pack may leave out the finest
+  return { root, lods, bones, mixer, acts, feet, footQ, bindQ, skinDecals, lod: 0 }; // lods[k] is LODk; a tier's pack may leave out the finest
 }
 export function makeActor(scene, i = 0) {
   const wrap = new T.Group();
@@ -224,6 +232,7 @@ export function pose(actor, name, t, name2 = null, t2 = 0, w2 = 0) {
   set(name, t, 1 - (name2 ? w2 : 0));
   if (name2) set(name2, t2, w2);
   actor.mixer.update(0);
+  if (actor.v3) settleShoulders(actor);
   const loose = name === 'run' ? 0.7 : 0.25; // a runner's hands close to loose fists
   // bat hands grip; the gloved hand stays open, each finger inside its stall (the glove is shaped on the open hand)
   if (actor.v3) curlFingers(actor, actor.show.has('bat') ? 1 : actor.show.has('glove') ? 0 : loose, actor.show.has('bat') ? 1 : loose);
@@ -280,9 +289,10 @@ function turnBone(b, dq) { // rotate a bone by dq, given in root space
   b.quaternion.copy(pk.q.invert().multiply(dq).multiply(pk.qb));
   b.updateMatrixWorld(true);
 }
+plantFeet.init = () => { pk.inv = new T.Matrix4(); pk.m = new T.Matrix4(); pk.q = new T.Quaternion(); pk.qb = new T.Quaternion(); pk.dq = new T.Quaternion(); for (let i = 0; i < 8; i++) pk.v.push(new T.Vector3()); };
 function plantFeet(actor, w) {
   const f = actor.form, B = f.bones;
-  if (!pk.inv) { pk.inv = new T.Matrix4(); pk.m = new T.Matrix4(); pk.q = new T.Quaternion(); pk.qb = new T.Quaternion(); pk.dq = new T.Quaternion(); for (let i = 0; i < 8; i++) pk.v.push(new T.Vector3()); }
+  if (!pk.inv) plantFeet.init();
   const restH = (f.restH = f.restH || Object.fromEntries(f.feet.map(([b, h]) => [b.name, h])));
   actor.wrap.updateMatrixWorld(true);
   pk.inv.copy(f.root.matrixWorld).invert();
@@ -317,6 +327,26 @@ function plantFeet(actor, w) {
     ba.quaternion.slerp(rest(actor, ba), w); // toes flat too (the mocap curls them into the dirt)
   }
 }
+// Shoulders: the mocap retarget lifts both clavicles 25-30° above the rig's rest (the CMU shoulder joints sit
+// elsewhere), a permanent shrug that puts the shoulder joints at neck height: padded-looking shoulders, no neck.
+// Take each clavicle most of the way back to its bind rotation, then turn the upper arm back so the arm keeps
+// the clip's direction in the body.
+const SHRUG_KEEP = 0.25;
+function settleShoulders(actor) {
+  const f = actor.form, B = f.bones;
+  if (!f.bindQ || !f.bindQ.clavicle_l) return;
+  if (!pk.inv) plantFeet.init();
+  actor.wrap.updateMatrixWorld(true);
+  pk.inv.copy(f.root.matrixWorld).invert();
+  for (const s of ['l', 'r']) {
+    const cl = B[`clavicle_${s}`], ua = B[`upperarm_${s}`], q0 = f.bindQ[`clavicle_${s}`];
+    if (!cl || !ua || !q0) continue;
+    const before = (pk.ua = pk.ua || new T.Quaternion()); rootSpace(ua, null, before);
+    cl.quaternion.slerp(q0, 1 - SHRUG_KEEP); cl.updateMatrixWorld(true);
+    rootSpace(ua, null, pk.qb);
+    turnBone(ua, pk.dq.copy(before).multiply(pk.qb.invert()));
+  }
+}
 const isLoop = (n) => LOOPS.has(n);
 export const clipDur = (n) => (A.clips[n] ? A.clips[n].duration : 1);
 
@@ -347,7 +377,11 @@ function attachDecals(actor) {
   const f = actor.form, chest = actor.bones.chest;
   if (!chest) return;
   if (!f.decals && f.skinDecals.word && f.skinDecals.num) { // wrapped on the jersey, bending with it
-    const mk = () => new T.MeshStandardMaterial({ transparent: true, roughness: 0.75, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8, side: T.DoubleSide }); // over the placket piping
+    // drawn 0.12 ft nearer the camera than they are: the coarse decal grid can't follow every bulge of the cloth
+    // under it (the placket piping cut through letters), but an arm in front still hides them
+    const mk = () => { const m = new T.MeshStandardMaterial({ transparent: true, roughness: 0.75, depthWrite: false, side: T.DoubleSide });
+      m.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\nmvPosition.xyz += normalize(-mvPosition.xyz) * 0.12; gl_Position = projectionMatrix * mvPosition;'); };
+      m.customProgramCacheKey = () => 'ds-decal-pull'; return m; };
     f.skinDecals.num.material = mk(); f.skinDecals.word.material = mk();
     f.decals = { num: f.skinDecals.num, word: f.skinDecals.word, skinned: true };
   }
@@ -378,7 +412,7 @@ function decal(actor, chest, w, h, front, d) {
 export function setNumber(actor, num, kit, team) {
   if (!actor.numMesh) return;
   actor.numMesh.visible = true;
-  const key = `${num}|${kit.num}|${kit.trim}|${team ? team.key : ''}|${actor.mirror ? 1 : 0}`;
+  const key = `${num}|${kit.num}|${kit.trim}|${kit.jersey}|${team ? team.key : ''}|${actor.mirror ? 1 : 0}`;
   if (actor.numKey === key) return;
   actor.numKey = key;
   actor.numMesh.material.map = decalTex(`n|${num}|${kit.num}|${kit.trim}`, 128, 128, (x) => {
@@ -388,10 +422,13 @@ export function setNumber(actor, num, kit, team) {
   const word = team ? String(team.club ? team.short : (team.short || team.name)).toUpperCase() : '';
   actor.wordMesh.visible = !!word;
   const font = (n) => `900 ${n}px Georgia, "Times New Roman", serif`;
-  if (word) actor.wordMesh.material.map = decalTex(`w|${word}|${kit.num}`, 256, 64, (x, W, H) => {
-    let fs = 44; x.font = font(fs);
-    while (x.measureText(word).width > W - 12 && fs > 18) { fs -= 2; x.font = font(fs); }
-    x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = kit.num || '#000'; x.fillText(word, W / 2, H / 2 + 2);
+  // sewn lettering: outlined in the jersey colour, so a letter crossing the placket piping (often the same colour) still reads
+  if (word) actor.wordMesh.material.map = decalTex(`w|${word}|${kit.num}|${kit.jersey}`, 512, 128, (x, W, H) => {
+    let fs = 88; x.font = font(fs);
+    while (x.measureText(word).width > W - 40 && fs > 36) { fs -= 4; x.font = font(fs); }
+    x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+    x.lineWidth = Math.round(fs * 0.17); x.strokeStyle = kit.jersey || '#FFF'; x.strokeText(word, W / 2, H / 2 + 4);
+    x.fillStyle = kit.num || '#000'; x.fillText(word, W / 2, H / 2 + 4);
   });
   const skinned = actor.form.decals && actor.form.decals.skinned;
   for (const m of [actor.numMesh, actor.wordMesh]) {

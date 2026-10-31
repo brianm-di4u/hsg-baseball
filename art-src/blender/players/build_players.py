@@ -118,6 +118,32 @@ def set_region(me, face_regions):
     me.color_attributes.active_color = col
 
 
+def smooth_shoulders(rig, body, radius=0.6, iters=14):
+    """Relax the skin weights over each shoulder. The MPFB weights change sharply between the clavicle, upper arm and
+    chest, so linear skinning bulges the deltoid into a pad when the arm comes down from the A-pose rest. Only the
+    shoulder bones' shares move (their total per vertex is kept), fading out toward the edge of the zone."""
+    bm = bmesh.new(); bm.from_mesh(body.data); bm.verts.ensure_lookup_table()
+    dl = bm.verts.layers.deform.active
+    inv = body.matrix_world.inverted()
+    for s in ('l', 'r'):
+        gs = [g.index for g in body.vertex_groups if g.name.startswith((f'upperarm_{s}', f'upperarm_twist_01_{s}', f'clavicle_{s}')) or g.name in ('spine_03', 'spine_02')]
+        c = inv @ (rig.matrix_world @ rig.data.bones[f'upperarm_{s}'].head_local)
+        zone = [(v, 1 - (v.co - c).length / radius) for v in bm.verts if (v.co - c).length < radius]
+        for _ in range(iters):
+            new = []
+            for v, k in zone:
+                d = v[dl]; tot = sum(d.get(g, 0.0) for g in gs)
+                if tot <= 0: continue
+                nb = [e.other_vert(v)[dl] for e in v.link_edges]
+                w = {g: d.get(g, 0.0) + (sum(n.get(g, 0.0) for n in nb) / len(nb) - d.get(g, 0.0)) * 0.5 * k for g in gs}
+                t2 = sum(w.values()) or 1.0
+                new.append((v, {g: x * tot / t2 for g, x in w.items()}))
+            for v, w in new:
+                for g, x in w.items():
+                    if x > 1e-4 or g in v[dl]: v[dl][g] = x
+    bm.to_mesh(body.data); bm.free()
+
+
 def dress_body(rig, body):
     """Region per face on the bare body, inflate the garments outward, drop the feet under the cleats."""
     me = body.data
@@ -301,7 +327,7 @@ def make_cap(rig, body, helmet=False):
     c, rx, ry, top = head_frame(rig, body, 0.42 if helmet else 0.34)
     bm = bmesh.new()
     pad = 0.08 if helmet else 0.065  # clear of the scalp everywhere
-    lift = 0.12 if helmet else 0.04  # the band is low round the ears (helmet) and nape; the front rides up to the brow
+    lift = 0.18 if helmet else 0.08  # the band is low round the ears (helmet) and nape; the front rides up to the brow
     h = (top - c.z) + pad + 0.02
     rings, seg = 9, 36
     verts = []
@@ -364,6 +390,7 @@ def make_mask(rig, body):
     def bar(p0, p1, r=0.022):
         d = (Vector(p1) - Vector(p0)); n = 6
         ax = d.normalized(); side = ax.cross(Vector((0, 1, 0))) if abs(ax.y) < 0.9 else ax.cross(Vector((1, 0, 0)))
+        p0 = Vector(p0) - ax * r; p1 = Vector(p1) + ax * r  # overlap the next bar: no gaps at the joins
         side.normalize(); up = ax.cross(side)
         r0 = [bm.verts.new(Vector(p0) + (side * math.cos(t) + up * math.sin(t)) * r) for t in [k / n * math.tau for k in range(n)]]
         r1 = [bm.verts.new(Vector(p1) + (side * math.cos(t) + up * math.sin(t)) * r) for t in [k / n * math.tau for k in range(n)]]
@@ -659,6 +686,7 @@ for vname in args.variants.split(','):
         elif 'eye' in n: region_eyes(o)
         else: region_all(o, REG['skin'])
     land = dress_body(rig, body)
+    smooth_shoulders(rig, body)
     add_acc_bones(rig)
     acc = [make_cap(rig, body), make_cap(rig, body, helmet=True), make_mask(rig, body),
            shell(body, rig, 'gear', lambda c, n: n.y < -0.35 and land['z_belt'] + 0.1 < c.z < bone_pos(rig, 'neck_01').z - 0.05 and abs(c.x) < 0.7, 0.14, 'gear', REG['gear']),

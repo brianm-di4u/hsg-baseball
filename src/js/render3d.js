@@ -65,7 +65,7 @@ export async function init3d(stage, onReady, art = []) {
     R3.fill = new T.DirectionalLight('#FFF4E6', 0.4); R3.scene.add(R3.fill); R3.scene.add(R3.fill.target);
     R3.sun = new T.DirectionalLight('#ffffff', 2.5); R3.sun.castShadow = r.shadowMap.enabled;
     R3.sun.shadow.mapSize.set(R3.quality === 'high' ? 2048 : 1024, R3.quality === 'high' ? 2048 : 1024);
-    R3.sun.shadow.bias = -0.0003; R3.sun.shadow.normalBias = 0.06; // a large normal bias detaches shadows from the feet
+    R3.sun.shadow.bias = -0.0003; R3.sun.shadow.normalBias = 0.025; // a large normal bias detaches shadows from the feet (0.06 still read as hovering)
     R3.scene.add(R3.sun); R3.scene.add(R3.sun.target);
     // actors: 9 fielders, batter, 3 runners, umpire, two base coaches
     for (let i = 0; i < 16; i++) R3.actors.push(makeActor(R3.scene, i));
@@ -81,9 +81,12 @@ export async function init3d(stage, onReady, art = []) {
     const gr = shx.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); shx.fillStyle = gr; shx.fillRect(0, 0, 64, 64);
     R3.ballShadow = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: new T.CanvasTexture(sh), transparent: true, depthWrite: false }));
     R3.ballShadow.rotation.x = -Math.PI / 2; R3.scene.add(R3.ballShadow);
-    // contact shadows: a soft dark spot under each foot (two per actor, one instanced draw), shrinking as a foot lifts
+    // contact shadows: a dark oval under each sole, along the foot (two per actor, one instanced draw), shrinking as a
+    // foot lifts. Tight and dark at the middle: the sun's shadow map is too soft and offset to show where a sole meets the dirt
+    const ct = document.createElement('canvas'); ct.width = ct.height = 64; const ctx = ct.getContext('2d');
+    const cgr = ctx.createRadialGradient(32, 32, 1, 32, 32, 32); cgr.addColorStop(0, 'rgba(0,0,0,0.95)'); cgr.addColorStop(0.5, 'rgba(0,0,0,0.7)'); cgr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = cgr; ctx.fillRect(0, 0, 64, 64);
     const cg = new T.PlaneGeometry(1, 1); cg.rotateX(-Math.PI / 2);
-    R3.contact = new T.InstancedMesh(cg, new T.MeshBasicMaterial({ map: R3.ballShadow.material.map, color: '#000000', transparent: true, opacity: 0.72, depthWrite: false, fog: false }), 32);
+    R3.contact = new T.InstancedMesh(cg, new T.MeshBasicMaterial({ map: new T.CanvasTexture(ct), color: '#000000', transparent: true, opacity: 0.8, depthWrite: false, fog: false }), 32);
     R3.contact.frustumCulled = false; R3.contact.renderOrder = 1; R3.scene.add(R3.contact);
     const N = 28, tg = new T.BufferGeometry();
     tg.setAttribute('position', new T.Float32BufferAttribute(new Float32Array(N * 2 * 3), 3));
@@ -149,8 +152,8 @@ function applyPlayers() {
 const CF = [['foot_l', 'ball_l', 'footL'], ['foot_r', 'ball_r', 'footR']];
 const CT = {};
 function contactPass() {
-  if (!CT.m) Object.assign(CT, { m: new T.Matrix4(), p: new T.Vector3(), q: new T.Vector3(), g: new T.Vector3(), at: new T.Vector3(), sc: new T.Vector3(), one: new T.Quaternion() });
-  const { m, p, q, g, at, sc, one } = CT;
+  if (!CT.m) Object.assign(CT, { m: new T.Matrix4(), p: new T.Vector3(), q: new T.Vector3(), g: new T.Vector3(), at: new T.Vector3(), sc: new T.Vector3(), one: new T.Quaternion(), up: new T.Vector3(0, 1, 0) });
+  const { m, p, q, g, at, sc, one, up } = CT;
   R3.scene.updateMatrixWorld(); // once; then every bone's matrixWorld is current
   let n = 0;
   for (const a of R3.actors) {
@@ -159,10 +162,12 @@ function contactPass() {
     for (const [ank, toe, v2] of CF) {
       const b = a.bones[ank] || a.bones[v2], t = a.bones[toe];
       if (!b) continue;
-      p.setFromMatrixPosition(b.matrixWorld); if (t) { q.setFromMatrixPosition(t.matrixWorld); p.add(q).multiplyScalar(0.5); }
-      const lift = Math.max(0, p.y - g.y - 0.2), s = Math.max(0, 1.5 - lift * 0.9);
+      p.setFromMatrixPosition(b.matrixWorld);
+      let yaw = a.wrap.rotation.y; // along the foot: ankle to ball (v2 rigs have no ball bone: the body's heading)
+      if (t) { q.setFromMatrixPosition(t.matrixWorld); yaw = Math.atan2(q.x - p.x, q.z - p.z); p.add(q).multiplyScalar(0.5); }
+      const lift = Math.max(0, p.y - g.y - 0.2), s = Math.max(0, 1 - lift * 1.5);
       if (s <= 0.05) continue;
-      m.compose(at.set(p.x, g.y + 0.06, p.z), one, sc.set(s, 1, s * 1.5));
+      m.compose(at.set(p.x, g.y + 0.06, p.z), one.setFromAxisAngle(up, yaw), sc.set(0.62 * s, 1, 1.35 * s));
       R3.contact.setMatrixAt(n++, m);
     }
   }

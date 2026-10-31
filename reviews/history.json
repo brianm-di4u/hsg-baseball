@@ -381,6 +381,60 @@
         "effortWeights": "S=1, M=2, L=4"
       },
       "date": "2026-10-31"
+    },
+    {
+      "loop": 7,
+      "scores": {
+        "characters": 5.5,
+        "charfit": 5.5,
+        "animation": 5.5,
+        "environment": 5.5,
+        "lighting": 6,
+        "ui": 6.5,
+        "readability": 6,
+        "mobile": 6
+      },
+      "total": 46.5,
+      "stalls": 0,
+      "verdict": "continue",
+      "critics": {
+        "critic-claude": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 6,
+          "environment": 5.5,
+          "lighting": 6,
+          "ui": 6,
+          "readability": 6,
+          "mobile": 5.5
+        },
+        "critic-codex": {
+          "characters": 5,
+          "charfit": 5,
+          "animation": 5.5,
+          "environment": 5,
+          "lighting": 5.5,
+          "ui": 6.5,
+          "readability": 5.5,
+          "mobile": 6
+        },
+        "advocate": {
+          "characters": 5.5,
+          "charfit": 5.5,
+          "animation": 6,
+          "environment": 5.5,
+          "lighting": 6,
+          "ui": 6.5,
+          "readability": 6,
+          "mobile": 6.5
+        }
+      },
+      "calibration": {
+        "perfGate": "pass: high desktop min 428.6 fps / p95 3.2 ms; medium phone proxy (4x CPU) min 66.8 fps / p95 17.3 ms (single runs); est. phone GPU = worst medium-mobile median gpuMs 0.900 (grounder) x 25 = 22.5 ms <= 26 (loop-6 night 1.33 ms re-measured 0.694 ms median, confirming noise); software GL 20.9/17.1 vs 19.9/15.1 baseline, better; heap 103.1/93.9/82.2 MB pass (low at 91% of budget, watch); medium tris max 531k <= 650k; download not in perf.json",
+        "factRulings": "ump mask in front of the face (A wrong), bars segmented (real); pure-black face overstated (A), eyes lost under brims on helmets and caps (real); R10 shoulders natural (B wrong), humps appear in forward-arm poses; grip wraps in R14/R05-front (B partly wrong); stance feet still hover (A wrong), ready-clip feet plant (advocate right); R04 no load/stride and 4-5 pose swap (A wrong), flash at the bat (B overstated); R07 camera cut 4-5, ball off the ground at possession in frame 8 but not visibly in the glove (A wrong on behind); night turf not washed (B wrong); pitch-speed feedback shown (A wrong); landscape R12 buttons in the gutters (A wrong); landscape R05 CB over the pitcher's legs (real); piping through letters persists after the loop-7 decal change (real)",
+        "effortWeights": "S=1, M=2, L=4"
+      },
+      "date": "2026-10-31"
     }
   ]
 }

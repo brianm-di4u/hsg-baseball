@@ -1,0 +1,188 @@
+[
+  {
+    "id": "G-helmet-brim-eyes",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R16-1B"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Raise helmet and cap brims so the lower edge sits >= 0.08 ft above the upper eyelid at rest and tilt them up 8-10 degrees; tuck the ear-shell lower edge to within 0.03 ft of cheek and jaw; add a skin-only hemisphere fill (~0.25). Test: both eyes visible with face luminance > 25/255 in R02-batter_head and R16-1B; no background between shell and cheek.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-shoulder-deformation",
+    "category": "charfit",
+    "expectedGain": 0.75,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R02-pitcher",
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R10-batter-trot"
+    ],
+    "benchmark": "art-src/samples/reference-renders/mpfb2_athlete_three_quarter.png",
+    "fix": "Humps appear only in forward-arm poses, so fix skinning: re-weight acromion/trapezius verts of jersey and body to clavicle and spine (<= 30% upper-arm influence) and add an upper-arm twist bone or corrective shape lowering the deltoid past 45 degrees of forward flexion. Test: shoulder outline in R02-pitcher and R17-pitcher_hands no higher than the base of the neck; shoulder:head width within 10% of the reference.",
+    "priority": 0.703,
+    "selected": true
+  },
+  {
+    "id": "G-kit-cloth",
+    "category": "characters",
+    "expectedGain": 0.75,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R02-pitcher"
+    ],
+    "benchmark": "smb4-2; art-src/samples/reference-renders/si_jersey_three_quarter.png",
+    "fix": "Bake fold/seam/AO normal maps (elbow, armpit, crotch, knee, belt bunching); model a placket with >= 5 buttons, belt loops and buckle, straight belt edge; matte flannel roughness ~0.8 with grain normal. Test: >= 3 fold lines per pant leg, visible buttons and straight belt edge in R17-pitcher_hands and R02-pitcher.",
+    "priority": 0.703,
+    "selected": true
+  },
+  {
+    "id": "G-decal-layering",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R16-1B",
+      "crops/high/R02-pitcher"
+    ],
+    "fix": "Not depth-fighting (the loop-7 offset did not fix it): stop the piping at the lettering band with a 0.35 ft gap, or bake the piping under the wordmark in the jersey texture; clamp the word to the chest visible at a 45-degree turn. Test: LAKE HAMILTON, LAKESIDE and HOT SPRINGS read in full in R17-pitcher_hands, R16-1B, R07-SS, R02-pitcher and R02-batter_hands.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-ump-catcher-gear",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R05-ump_head",
+      "crops/high/R06-catcher_glove"
+    ],
+    "fix": "Cage position is already correct. Rebuild mask bars as continuous swept tubes with no segment gaps; close the catcher chest protector's jagged neck opening; add knee caps and two straps to the shin guards. Test: no tan gaps in R05-ump_head bars; clean collar and knee caps in R06-catcher_glove.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-stance-feet",
+    "category": "animation",
+    "expectedGain": 0.3,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "crops/high/R05-batter_feet",
+      "crops/high/R16-1B"
+    ],
+    "fix": "Ready-clip IK works but the stance still floats: log pre-IK foot height in the R05 stance, lower the stance clip root or raise the threshold to 0.4 ft for the stance, and assert the IK weight reaches 1 while the stance plays. Test: no sole-to-shadow gap for either foot in R05-batter_feet.",
+    "priority": 0.563,
+    "selected": true
+  },
+  {
+    "id": "G-glove-model",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R06-catcher_glove"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Model a fielder's glove with web, pocket, heel, finger stalls and lacing plus leather normal/roughness (~0.5), and a separate round catcher's mitt with a deep pocket. Test: web and lacing visible in R17-pitcher_hands and R06-catcher_glove.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-swing-load-stride",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R04"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Key a load (hands back 0.3 ft) and a front-foot stride lifting and landing over >= 2 sampled frames before contact; no single-tick cocked-to-through jump. Test: front foot lifts and lands between frames 1-4 of strips/high/R04; frames 4 and 5 differ by less than half the swing arc.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-catch-contact",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R07"
+    ],
+    "fix": "Glove-hand IK toward the predicted ball over the last 0.25 s before possession; show the ball in the pocket from the camera side on the possession frame; capture R07 without the camera cut and add a 2-key run-to-crouch deceleration. Test: ball visible in the glove in strips/high/R07 frame 7 or 8; no cut between frames 4 and 5.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-landscape-pitch-buttons",
+    "category": "mobile",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS7",
+    "evidence": [
+      "high/landscape/R05"
+    ],
+    "fix": "In landscape, stack FB/CH/SL/CB as a 2x2 block in the left gutter (<= 22% of the width) or raise the pitching-camera target by 8% of the viewport height. Test: pitcher's legs fully visible in high/landscape/R05.",
+    "priority": 0.45,
+    "selected": false
+  },
+  {
+    "id": "G-adboard-backdrop",
+    "category": "environment",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS4",
+    "evidence": [
+      "crops/high/R02-batter_hands",
+      "high/desktop/R15"
+    ],
+    "benchmark": "smb4-3",
+    "fix": "Lay the wall boards edge to edge with no overlap; hide or dress the second field past the R15 fence; fade the backdrop foot into tree-coloured fog. Test: no GATOR FATORS in R02-batter_hands; no flat field or hard seam in R15.",
+    "priority": 0.45,
+    "selected": false
+  },
+  {
+    "id": "G-phone-field-framing",
+    "category": "readability",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS5",
+    "evidence": [
+      "high/mobile/R07",
+      "high/desktop/R16"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "Portrait fielding plays get their own camera fitted to the bases and the receiving defender, cropping the empty foreground; the batting camera keeps a runner on first in frame. Test: both corner bases in frame in high/mobile/R07; runner fully in frame in high/desktop/R16.",
+    "priority": 0.375,
+    "selected": false
+  }
+]
