@@ -147,19 +147,22 @@ function applyPlayers() {
 }
 // Contact shadows under the feet of every visible player (feet: ankle and toe bones of each side).
 const CF = [['foot_l', 'ball_l', 'footL'], ['foot_r', 'ball_r', 'footR']];
+const CT = {};
 function contactPass() {
-  const m = new T.Matrix4(), p = new T.Vector3(), q = new T.Vector3(), g = new T.Vector3(), one = new T.Quaternion();
+  if (!CT.m) Object.assign(CT, { m: new T.Matrix4(), p: new T.Vector3(), q: new T.Vector3(), g: new T.Vector3(), at: new T.Vector3(), sc: new T.Vector3(), one: new T.Quaternion() });
+  const { m, p, q, g, at, sc, one } = CT;
+  R3.scene.updateMatrixWorld(); // once; then every bone's matrixWorld is current
   let n = 0;
   for (const a of R3.actors) {
     if (!a.wrap.visible || !a.mesh || !a.mesh.castShadow) continue;
-    a.wrap.getWorldPosition(g);
+    g.setFromMatrixPosition(a.wrap.matrixWorld);
     for (const [ank, toe, v2] of CF) {
       const b = a.bones[ank] || a.bones[v2], t = a.bones[toe];
       if (!b) continue;
-      b.getWorldPosition(p); if (t) { t.getWorldPosition(q); p.add(q).multiplyScalar(0.5); }
+      p.setFromMatrixPosition(b.matrixWorld); if (t) { q.setFromMatrixPosition(t.matrixWorld); p.add(q).multiplyScalar(0.5); }
       const lift = Math.max(0, p.y - g.y - 0.2), s = Math.max(0, 1.3 - lift * 0.9);
       if (s <= 0.05) continue;
-      m.compose(new T.Vector3(p.x, g.y + 0.06, p.z), one, new T.Vector3(s, 1, s * 1.5));
+      m.compose(at.set(p.x, g.y + 0.06, p.z), one, sc.set(s, 1, s * 1.5));
       R3.contact.setMatrixAt(n++, m);
     }
   }
@@ -168,11 +171,12 @@ function contactPass() {
 // Detail by on-screen height: a player taller than LOD_PX[0] px on screen gets LOD0, taller than LOD_PX[1] LOD1. From
 // tools/fidelity.mjs: LOD1 stays within ~4 points of LOD0's pixel error from 360 px down; LOD2 only pays off when tiny.
 export const LOD_PX = [200, 45];
+const LP = { p: null };
 function lodPass() {
-  const f = (R3.H / 2) / Math.tan(R3.cam.fov * Math.PI / 360), p = new T.Vector3();
+  const f = (R3.H / 2) / Math.tan(R3.cam.fov * Math.PI / 360), p = (LP.p = LP.p || new T.Vector3());
   for (const a of R3.actors) {
     if (!a.wrap.visible || !a.v3) continue;
-    a.wrap.getWorldPosition(p); p.y += 3;
+    p.copy(a.wrap.position); p.y += 3;
     const px = 6.2 * f / Math.max(0.1, p.distanceTo(R3.cam.position));
     setLod(a, px > LOD_PX[0] ? 0 : px > LOD_PX[1] ? 1 : 2);
   }
@@ -244,14 +248,23 @@ function placeBall(b, big = 1) {
   if (!b) { R3.ball.visible = false; R3.ballShadow.visible = false; return; }
   R3.ball.visible = true; R3.ballShadow.visible = true;
   R3.ball.position.copy(g2t(b.x, b.y, Math.max(0.12, b.z)));
-  const d = R3.ball.position.distanceTo(R3.cam.position);
-  const px = (R3.H / 2) / Math.tan(R3.cam.fov * Math.PI / 360) / d * 0.25; // ball diameter in px at true size
-  const s = Math.max(1, (big * 5) / Math.max(0.01, px)); // keep it at least ~5 px across
-  R3.ball.scale.setScalar(s);
+  R3.ballBig = big;
+  const s = ballScale();
   R3.ball.rotation.set(b.y * 0.9, 0, b.x * 0.3); // spin from position, so a frame is reproducible
   R3.ballShadow.position.set(R3.ball.position.x, 0.08, R3.ball.position.z);
-  const ss = 0.7 * s * (1 + Math.min(2, b.z / 30)); R3.ballShadow.scale.set(ss, ss, 1);
-  R3.ballShadow.material.opacity = Math.max(0.15, 1 - b.z / 120);
+  sizeBallShadow(s, b.z);
+}
+// The ball keeps a minimum on-screen size (about 5 px across) from wherever the camera is.
+function ballScale() {
+  const d = R3.ball.position.distanceTo(R3.cam.position);
+  const px = (R3.H / 2) / Math.tan(R3.cam.fov * Math.PI / 360) / d * 0.25; // ball diameter in px at true size
+  const s = Math.max(1, (R3.ballBig * 5) / Math.max(0.01, px));
+  R3.ball.scale.setScalar(s);
+  return s;
+}
+function sizeBallShadow(s, bz) {
+  const ss = 0.7 * s * (1 + Math.min(2, bz / 30)); R3.ballShadow.scale.set(ss, ss, 1);
+  R3.ballShadow.material.opacity = Math.max(0.15, 1 - bz / 120);
 }
 // Two-bone arm IK: bend the elbow so shoulder-to-hand spans the target's distance, then swing the upper arm onto it.
 function ikArm(actor, side, target) {
@@ -634,7 +647,7 @@ export function render3d(mode, g, ui, titleT = 0) {
   }
   if (W3.water) W3.water.color.setHSL(0.52, 0.27, 0.4 + 0.02 * Math.sin(amb() * 2));
   if (R3.look) closeCamera(R3.look);
-  { const f = R3.fill, c = R3.cam; f.position.copy(c.position).add(new T.Vector3(0, 30, 0)); c.getWorldDirection(f.target.position); f.target.position.multiplyScalar(100).add(c.position); f.intensity = 0.22 * R3.sun.intensity; }
+  { const f = R3.fill, c = R3.cam; f.position.copy(c.position).add(new T.Vector3(0, 30, 0)); c.getWorldDirection(f.target.position); f.target.position.multiplyScalar(100).add(c.position); f.intensity = 0.3 * R3.sun.intensity; }
   // structures the camera sits behind (the press box, from the high-home field camera) would fill the frame: hide them
   if (R3.park && R3.park.camHide) {
     const cd = Math.hypot(R3.cam.position.x, R3.cam.position.z), p = new T.Vector3();
@@ -709,6 +722,7 @@ function closeCamera(L) {
   const c = R3.cam; c.fov = fov;
   c.position.set(p.x + Math.sin(face) * Math.cos(L.pitch) * dist, p.y + Math.sin(L.pitch) * dist, p.z + Math.cos(face) * Math.cos(L.pitch) * dist);
   c.lookAt(p); c.updateProjectionMatrix();
+  if (R3.ball.visible) sizeBallShadow(ballScale(), R3.ball.position.y); // sized for the close camera, not the one it replaced
 }
 // The WebGL frame alone (no 2D overlay or HUD) as a PNG data URL, rendered now: read back in the same task.
 export function glShot() {

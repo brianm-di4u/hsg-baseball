@@ -47,11 +47,14 @@ export async function loadPlayers(pack) {
     const k = hip(b) / hip('average');
     v3.clips[b] = {};
     for (const c of src.animations) {
+      // rotations only, plus the pelvis's travel: the exporter also writes every bone's position and scale, which the
+      // mixer would otherwise evaluate every frame for nothing (accessory scale is set by pose())
       const cl = c.clone();
+      cl.tracks = cl.tracks.filter((tr) => tr.name.endsWith('.quaternion') || tr.name === 'pelvis.position');
       if (k !== 1) for (const tr of cl.tracks) if (tr.name === 'pelvis.position') {
         const v = tr.values.slice(); for (let i = 0; i < v.length; i++) v[i] *= k; tr.values = v;
       }
-      v3.clips[b][c.name] = cl;
+      v3.clips[b][c.name] = cl.optimize();
     }
   }
   for (const [k, url] of Object.entries(pack.skin || {})) {
@@ -60,6 +63,7 @@ export async function loadPlayers(pack) {
     v3.skin[k] = t;
   }
   A.v3 = v3;
+  pack.glb = null; pack.skin = null; // the parsed models are all that's needed: let the multi-MB base64 strings go
   return v3;
 }
 
@@ -144,13 +148,14 @@ export function makeActor(scene, i = 0) {
 // Gives an actor the v3 bodies (after loadPlayers), or takes them away (the low tier); the v2 form always stays.
 export function useV3(actor, on) {
   on = on && !!A.v3;
-  if (on && !actor.forms.average) for (const b of Object.keys(A.v3.builds)) actor.forms[b] = makeForm(A.v3.builds[b].scene, A.v3.clips[b], actor.mat);
   if (actor.v3 === on) return;
   actor.v3 = on; actor.dressKey = null; actor.numKey = null;
   if (!on && actor.mat.map) { actor.mat.map = null; actor.mat.needsUpdate = true; }
   useForm(actor, on ? 'average' : 'v2');
 }
 function useForm(actor, key) {
+  // v3 builds are made the first time an actor needs them (most actors only ever wear one or two)
+  if (!actor.forms[key] && key !== 'v2' && A.v3 && A.v3.builds[key]) actor.forms[key] = makeForm(A.v3.builds[key].scene, A.v3.clips[key], actor.mat);
   const f = actor.forms[key];
   if (!f || actor.form === f) return;
   if (actor.form) actor.wrap.remove(actor.form.root);
@@ -221,9 +226,9 @@ function ground(actor, on) {
   r.position.y = 0;
   if (!on || !f.feet.length) return;
   actor.wrap.updateMatrixWorld(true);
-  const p = (gp.v = gp.v || new T.Vector3());
+  const p = (gp.v = gp.v || new T.Vector3()), inv = (gp.m = gp.m || new T.Matrix4()).copy(actor.wrap.matrixWorld).invert();
   let low = Infinity;
-  for (const [b, h] of f.feet) { b.getWorldPosition(p); actor.wrap.worldToLocal(p); low = Math.min(low, p.y - h); }
+  for (const [b, h] of f.feet) { p.setFromMatrixPosition(b.matrixWorld).applyMatrix4(inv); low = Math.min(low, p.y - h); }
   r.position.y = -low;
 }
 const isLoop = (n) => LOOPS.has(n);
@@ -275,6 +280,7 @@ function decal(actor, chest, w, h, front, d) {
   const upBy = d ? (front ? d.upFront : d.upBack) : (front ? 0.3 : 0.32), out = d ? (front ? d.front : d.back) : (front ? 0.47 : 0.45);
   m.position.copy(up.multiplyScalar(upBy)).addScaledVector(dir, out);
   m.quaternion.setFromUnitVectors(new T.Vector3(0, 0, 1), dir);
+  if (d && !front) m.geometry.scale(-1, 1, 1); // v3's chest bone is rolled differently: the back number would read mirrored
   chest.add(m);
   return m;
 }

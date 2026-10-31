@@ -31,6 +31,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--variants', default='lean,average,stocky')
 ap.add_argument('--lods', default='28000,9000,2600')
 ap.add_argument('--no-anim', action='store_true')
+ap.add_argument('--no-mocap', action='store_true', help='keep the v2 clips for pitch, swing, stance, throw and run')
 ap.add_argument('--preview', action='store_true')
 args = ap.parse_args(argv)
 LODS = [int(x) for x in args.lods.split(',')]
@@ -234,6 +235,7 @@ def rigid(o, rig, bone):
 
 def new_obj(name, bm):
     for dl in list(bm.verts.layers.deform): bm.verts.layers.deform.remove(dl)  # parts copied from the body keep no body weights
+    for f in bm.faces: f.smooth = True  # smooth shading: gear and headwear read as moulded, not faceted
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o)
     return o
@@ -256,7 +258,7 @@ def make_cap(rig, body, helmet=False):
     bm = bmesh.new()
     pad = 0.07 if helmet else 0.03
     h = (top - c.z) + pad
-    rings, seg = 7, 28
+    rings, seg = 9, 36
     verts = []
     for i in range(rings + 1):
         a = (i / rings) * (math.pi / 2)
@@ -559,6 +561,9 @@ for vname in args.variants.split(','):
         v2rig, actions = load_v2()
         names = retarget(v2rig, rig, actions)
         bpy.data.objects.remove(v2rig, do_unlink=True)
+        if not args.no_mocap:  # CMU motion capture replaces the v2 pitch, swing, stance, throw and run (mocap.py)
+            sys.path.insert(0, HERE); import mocap
+            mocap.build(rig, ROOT, lambda m: print('MOCAP', m))
     meta['bones'] = [b.name for b in rig.data.bones]
     meta['variants'][vname] = {'tris': counts, 'clips': names, 'height': max((lod0.matrix_world @ v.co).z for v in lod0.data.vertices),
                                'hipHeight': (rig.matrix_world @ rig.data.bones['pelvis'].head_local).z, 'landmarks': land, 'chest': chest}

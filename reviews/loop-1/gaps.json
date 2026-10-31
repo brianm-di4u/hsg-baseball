@@ -1,0 +1,205 @@
+[
+  {
+    "id": "G-face-fill",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 5,
+    "effort": "S",
+    "workstream": "WS3",
+    "evidence": [
+      "crops/high/R02-batter_head",
+      "crops/high/R06-catcher_glove",
+      "crops/high/R14-batter"
+    ],
+    "benchmark": "smb4-4",
+    "fix": "Hemisphere sky fill plus camera-side rim on skin, with a skin luminance floor. Test: mean face luminance >= 35/255 with eye whites and brows visible in R02-batter_head and R06-catcher_glove. Also lifts lighting about +0.25.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-neckline-cuffs",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R16-1B",
+      "crops/high/R09-LF",
+      "crops/high/R14-batter"
+    ],
+    "fix": "Modelled collar band and sleeve cuffs; delete body faces under the garment. Test: no skin triangles or jagged edges at neck or cuffs in the cited crops.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-stance-grounding",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R03",
+      "crops/high/R05-batter_feet"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Set the pivot foot on the rubber and IK-pin it through the leg lift; extend foot grounding to the batting stance. Test: sole within 0.05 ft of the surface in R03 strip frames 1-6 and in R05-batter_feet.",
+    "priority": 0.938,
+    "selected": true
+  },
+  {
+    "id": "G-crowd-scale",
+    "category": "environment",
+    "expectedGain": 1,
+    "severity": 5,
+    "effort": "M",
+    "workstream": "WS4",
+    "evidence": [
+      "high/desktop/R05",
+      "crops/high/R17-pitcher-back",
+      "high/mobile/R05"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "Rescale the backstop crowd to life size (head about 0.75 ft) or replace with tiered impostor fans. Test: crowd heads smaller than the catcher's helmet in high/desktop/R05, R17 and high/mobile/R05.",
+    "priority": 0.75,
+    "selected": true
+  },
+  {
+    "id": "G-result-banners",
+    "category": "ui",
+    "expectedGain": 0.5,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS7",
+    "evidence": [
+      "high/desktop/R15",
+      "high/desktop/R10",
+      "high/desktop/R01"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "Panelled HR/hit banner (result, distance, batter) with entry motion, held through the trot; opaque title panel. Test: panel visible in high/desktop/R10 and R15; no field lines through the R01 panel.",
+    "priority": 0.75,
+    "selected": true
+  },
+  {
+    "id": "G-cap-helmet",
+    "category": "characters",
+    "expectedGain": 0.75,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R16-1B",
+      "crops/high/R09-LF",
+      "crops/high/R02-batter_head"
+    ],
+    "benchmark": "smb4-2",
+    "fix": "Cap with a front-only bill no wider than the head and the crown seated on the skull; smooth-shaded helmet of 32+ segments with a molded jaw-following ear flap. Test: R16-1B reads as a ball cap; no facet bands or quad specular in R02-batter_head.",
+    "priority": 0.703,
+    "selected": true
+  },
+  {
+    "id": "G-wide-cam-scale",
+    "category": "readability",
+    "expectedGain": 0.75,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS5",
+    "evidence": [
+      "high/desktop/R16",
+      "high/desktop/R13",
+      "high/mobile/R07",
+      "strips/high/R07"
+    ],
+    "benchmark": "smb3-1",
+    "fix": "Ball- and fielder-following cameras (players >= 40 px desktop, >= 30 px mobile), keep the R16 runner in frame, add a possession ring, clamp on-screen ball scale to <= 1.5x real within 30 ft of the camera. Test: R07, R13, R16, R07 strip frames 7-8.",
+    "priority": 0.563,
+    "selected": false
+  },
+  {
+    "id": "G-mirrored-numbers",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 4,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R05-batter-front",
+      "crops/high/R14-batter",
+      "high/mobile/R05",
+      "crops/high/R17-pitcher-back"
+    ],
+    "benchmark": "smb4-4",
+    "fix": "Flip the v3 back-number decal U and give every player a number. Test: '23', '16' and '27' read correctly; the pitcher has a number in R17-pitcher-back.",
+    "priority": 0.563,
+    "selected": false
+  },
+  {
+    "id": "G-body-variety",
+    "category": "characters",
+    "expectedGain": 0.3,
+    "severity": 3,
+    "effort": "S",
+    "workstream": "WS1",
+    "evidence": [
+      "high/desktop/R05",
+      "crops/high/R16-1B",
+      "crops/high/R17-pitcher-back"
+    ],
+    "fix": "Push the stocky preset (5 ft 9, waist and chest +15%) and make sure the R05 and R07 lineups include lean, average and stocky players. Test: 3 builds distinguishable in high/desktop/R05 and R07.",
+    "priority": 0.563,
+    "selected": false
+  },
+  {
+    "id": "G-glove-mask-gear",
+    "category": "characters",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R17-pitcher_hands",
+      "crops/high/R06-catcher_glove",
+      "crops/high/R05-batter-front",
+      "crops/high/R05-batter_feet"
+    ],
+    "benchmark": "smb3-3",
+    "fix": "Glove with finger stalls, web and pocket; mask frame with chin cup touching the face; plated chest protector and knee-capped shin guards; laced cleats with spikes. Test: each visible in its cited crop.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-garment-construction",
+    "category": "charfit",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS1",
+    "evidence": [
+      "crops/high/R07-SS",
+      "crops/high/R12-pitcher",
+      "crops/high/R14-batter"
+    ],
+    "benchmark": "si_jersey_three_quarter",
+    "fix": "Placket and buttons, collar and sleeve piping, wrinkle normal map at elbows, armpits and waist, belt loops and buckle, stirrup cut-outs. Test: placket visible in R07-SS and R12-pitcher.",
+    "priority": 0.469,
+    "selected": false
+  },
+  {
+    "id": "G-fielding-freeze",
+    "category": "animation",
+    "expectedGain": 0.5,
+    "severity": 4,
+    "effort": "M",
+    "workstream": "WS2",
+    "evidence": [
+      "strips/high/R07",
+      "crops/high/R09-LF"
+    ],
+    "fix": "Blend the crouch into a glove reach, transfer and throw; capture R07 without a camera cut; capture the R09 catch. Test: glove moves across R07 strip frames 5-8; glove at the ball in R09-LF.",
+    "priority": 0.469,
+    "selected": false
+  }
+]

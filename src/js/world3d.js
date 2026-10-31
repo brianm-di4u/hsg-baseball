@@ -247,7 +247,9 @@ function seating(group, a, b, rows, L, o = {}) {
   struct.castShadow = true; struct.receiveShadow = true; holder.add(struct);
   // the crowd: one inclined textured quad resting on the steps
   const cm = crowdMat(L);
-  if (cm.map) { cm.map.repeat.set(Math.max(1, Math.round(len / 75)), Math.max(1, Math.round(rows / 6))); cm.map.wrapT = T.RepeatWrapping; } // the strip holds ~6 rows, ~75 ft wide at true scale
+  // the painted strip shows about six rows of fans; one tile covers ~36 ft and three rows, so a fan is about life-size
+  // next to the players (at twice that, the crowd behind home loomed over the batter in the pitching camera)
+  if (cm.map) { cm.map.repeat.set(Math.max(1, Math.round(len / 36)), Math.max(1, Math.round(rows / 3))); cm.map.wrapT = T.RepeatWrapping; }
   const slope = Math.hypot(D, rows * rise);
   const crowd = new T.Mesh(new T.PlaneGeometry(len, slope), cm);
   crowd.position.set(len / 2, base + rows * rise / 2 + 1.4, D / 2);

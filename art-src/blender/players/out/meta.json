@@ -65,9 +65,9 @@
  "variants": {
   "lean": {
    "tris": [
-    27999,
-    9000,
-    2599
+    28000,
+    8998,
+    2600
    ],
    "clips": [],
    "height": 6.308245658874512,
@@ -83,13 +83,13 @@
     "upBack": 0.15,
     "back": 0.22707438886165618
    },
-   "bytes_high": 2094816,
-   "bytes_medium": 732064
+   "bytes_high": 1637428,
+   "bytes_medium": 536752
   },
   "average": {
    "tris": [
     27999,
-    9000,
+    8999,
     2600
    ],
    "clips": [
@@ -120,12 +120,12 @@
     "upBack": 0.15,
     "back": 0.23244849264621734
    },
-   "bytes_high": 2676008,
-   "bytes_medium": 1307436
+   "bytes_high": 2227532,
+   "bytes_medium": 1124824
   },
   "stocky": {
    "tris": [
-    28000,
+    27999,
     9000,
     2600
    ],
@@ -143,8 +143,8 @@
     "upBack": 0.15,
     "back": 0.255038623213768
    },
-   "bytes_high": 2096716,
-   "bytes_medium": 732520
+   "bytes_high": 1639868,
+   "bytes_medium": 538476
   }
  },
  "lods": [
