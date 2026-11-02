@@ -12,6 +12,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+// Benchmark screenshots (git-ignored): the workspace's shared reference/benchmarks/baseball/, else benchmarks/ here.
+const BENCH = [path.resolve(ROOT, '..', '..', 'reference', 'benchmarks', 'baseball'), BENCH].find((d) => fs.existsSync(d)) || BENCH;
 const args = process.argv.slice(2);
 const N = +args.find((a) => /^\d+$/.test(a));
 if (!(N >= 0)) { console.error('usage: review-prep.mjs <N> [--tier=high] [--shots=review-loop-N]'); process.exit(2); }
@@ -58,7 +60,7 @@ fs.writeFileSync(path.join(loopDir, 'brief-advocate.md'), fill(read(path.join(br
 let drift = '';
 if (N > 0 && N % 3 === 0) {
   const pick = ['smb3-3.png', 'smb4-2.png', 'smb4-4.png'][(N / 3 - 1) % 3];
-  const src = path.join(ROOT, 'benchmarks', pick);
+  const src = path.join(BENCH, pick);
   if (fs.existsSync(src)) {
     fs.copyFileSync(src, path.join(loopDir, 'calibration.png'));
     fs.writeFileSync(path.join(ROOT, 'screenshots', `.calibration-loop-${N}`), `${pick}\n`); // the answer stays outside the review folder
