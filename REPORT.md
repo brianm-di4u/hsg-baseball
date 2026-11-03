@@ -176,3 +176,12 @@ For the 3D view, see `VISUAL-REPORT.md`: GPU fps, the software-GL preset and the
 `PRD.md`, `MECHANICS.md`, `DEV-PLAN.md` (milestones, hook spec, test matrix, defect log),
 `SAMPLES.md`, `research/town-content.md`, `data/facts.json`, `tools/balance.mjs`,
 `tools/check-facts.mjs`, `tests/*.test.mjs` (12 files plus helpers), `src/` (17 modules + CSS).
+
+## Update: repainted backgrounds (2026-11-02)
+
+The three ridge panoramas (`ridges-day`, `ridges-golden`, `ridges-night`) were repainted. The new source PNGs replace
+the `art-src/art.json` sources (git-ignored; the workspace keeps copies of the old and new paintings in
+`reference/backgrounds/`) and were packed with the usual tools. Older descriptions of these paintings in
+VISUAL-REPORT.md refer to the previous art.
+
+`npm test`: 94/94 passed.

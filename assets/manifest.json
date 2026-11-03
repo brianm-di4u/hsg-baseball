@@ -3,19 +3,19 @@
   "file": "ridges-day.webp",
   "w": 2048,
   "h": 683,
-  "bytes": 200162
+  "bytes": 179154
  },
  "ridges-golden": {
   "file": "ridges-golden.webp",
   "w": 2048,
   "h": 683,
-  "bytes": 185410
+  "bytes": 196316
  },
  "ridges-night": {
   "file": "ridges-night.webp",
   "w": 2048,
   "h": 683,
-  "bytes": 120980
+  "bytes": 145584
  },
  "grass-tile": {
   "file": "grass-tile.webp",
