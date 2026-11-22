@@ -12,8 +12,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-// Benchmark screenshots (git-ignored): the workspace's shared reference/benchmarks/baseball/, else benchmarks/ here.
-const BENCH = [path.resolve(ROOT, '..', '..', 'reference', 'benchmarks', 'baseball'), BENCH].find((d) => fs.existsSync(d)) || BENCH;
+// Shared workspace material (reference/, research/): $HSG_WORKSPACE, else this repo's grandparent (the workspace root when
+// the repo sits in <workspace>/repos/).
+const WORKSPACE = process.env.HSG_WORKSPACE || path.resolve(ROOT, '..', '..');
+// Benchmark screenshots (git-ignored): <workspace>/reference/benchmarks/baseball/, else benchmarks/ here.
+const LOCAL_BENCH = path.join(ROOT, 'benchmarks');
+const BENCH = [path.join(WORKSPACE, 'reference', 'benchmarks', 'baseball'), LOCAL_BENCH].find((d) => fs.existsSync(d)) || LOCAL_BENCH;
 const args = process.argv.slice(2);
 const N = +args.find((a) => /^\d+$/.test(a));
 if (!(N >= 0)) { console.error('usage: review-prep.mjs <N> [--tier=high] [--shots=review-loop-N]'); process.exit(2); }
